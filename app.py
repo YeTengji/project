@@ -55,14 +55,25 @@ def signup():
         existing_user = User.query.filter_by(username=form.username.data).first()
         if existing_user:
             flash('Username already taken.', 'danger')
-            return redirect(url_for('signup'))
+            return render_template('signup.html', form=form)
+        existing_email = User.query.filter_by(email=form.email.data.lower()).first()
+        if existing_email:
+            flash('Email already registered. Please log in.', 'danger')
+            return redirect(url_for('login'))
         new_user = User(
+            first_name=form.first_name.data.strip(),
+            last_name=form.last_name.data.strip(),
             username=form.username.data,
-            email=form.email.data,
+            email=form.email.data.lower(),
             password=generate_password_hash(form.password.data)
         )
-        db.session.add(new_user)
-        db.session.commit()
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+        except:
+            db.session.rollback()
+            flash('Something went wrong. Please try again.', 'danger')
+            return redirect(url_for('signup'))
         flash('Account created successfully. Please log in.', 'success')
         return redirect(url_for('login'))
     return render_template('signup.html', form=form)

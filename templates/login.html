@@ -3,57 +3,54 @@
 {% block title %}Login{% endblock %}
 
 {% block body %}
-    <div class="container d-flex flex-column justify-content-center align-items-center vh-100">
-        <div>
-            <div class="mb-5">
-                <h3>Login</h3> 
-                <p>First time here? <a href="#!">Sign up</a></p>
+
+    <div class="container vh-100 d-flex justify-content-center align-items-center">
+        <div class="row w-100 align-items-stretch">
+
+            <div class="col-md-6 d-flex overflow-hidden p-0">
+                <img src="{{ url_for('static', filename='images/login_cover.jpg') }}" alt="Login Cover" class="img-fluid w-100 object-fit-cover">
             </div>
-            <form method="POST" action="{{ url_for('login') }}">
-                {{ form.hidden_tag() }}
 
-                <div class="mb-3">
-                    {{ form.username.label(class="form-label") }}
-                    {{ form.username(class="form-control") }}
-                    {% for error in form.username.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                    {% endfor %}
+            <div class="col-md-6 d-flex">
+                <div class="border rounded p-5 w-100">
+                    <div class="mb-5">
+                        <h3>Login</h3> 
+                        <p>First time here? <a href="{{ url_for('signup') }}">Sign up</a></p>
+                    </div>
+                    <form method="POST" action="{{ url_for('login') }}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label") }}
+                            {{ form.username(class="form-control") }}
+                            {% for error in form.username.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control") }}
+                            {% for error in form.password.errors %}
+                                <div class="text-danger">{{ error }} </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="exampleCheck1">
+                            <label class="form-check-label" for="exampleCheck1">Check me out</label>
+                        </div>
+
+                        {{ form.submit(class="btn btn-primary") }}
+                    </form>
+
+                    <!-- WIP OAuth Options -->
+                    <div class="mt-5">
+                        <button type="button" class="bg-body-tertiary btn">Google</button>
+                    </div>
                 </div>
-
-                <div class="mb-3">
-                    {{ form.password.label(class="form-label") }}
-                    {{ form.password(class="form-control") }}
-                    {% for error in form.password.errors %}
-                        <div class="text-danger">{{ error }} </div>
-                    {% endfor %}
-                </div>
-
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="exampleCheck1">
-                    <label class="form-check-label" for="exampleCheck1">Check me out</label>
-                </div>
-
-                {{ form.submit(class="btn btn-primary") }}
-            </form>
-
-            <!-- WIP OAuth Options -->
-            <div class="mt-5">
-                <button type="button" class="bg-body-tertiary btn">Google</button>
             </div>
         </div>
     </div>
 
-    <!-- Flash -->
-    <div id="bottom-alert-container" class="position-fixed bottom-0 start-50 translate-middle-x mb-5 z-3" style="width: 100%; max-width: 600px;">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-    </div>
 {% endblock %}
