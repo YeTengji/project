@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_login import LoginManager, login_required, login_user
+from sqlalchemy.exc import SQLAlchemyError
 
 from forms import LoginForm, SignUpForm
 from models import db, User
@@ -60,6 +61,7 @@ def signup():
         if existing_email:
             flash('Email already registered. Please log in.', 'danger')
             return redirect(url_for('login'))
+        
         new_user = User(
             first_name=form.first_name.data.strip(),
             last_name=form.last_name.data.strip(),
@@ -67,11 +69,13 @@ def signup():
             email=form.email.data.lower(),
             password=generate_password_hash(form.password.data)
         )
+        
         try:
             db.session.add(new_user)
             db.session.commit()
-        except:
+        except SQLAlchemyError as e:
             db.session.rollback()
+            print(f"Database error: {e}")
             flash('Something went wrong. Please try again.', 'danger')
             return redirect(url_for('signup'))
         flash('Account created successfully. Please log in.', 'success')
