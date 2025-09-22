@@ -1,0 +1,76 @@
+<div class="modal fade" id="signUpModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="signUpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content p-5">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="signUpModalLabel">Sign Up</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <form class="row g-3" method="POST" action="{{ url_for('login') }}">
+                    <input type="hidden" name="form_type" value="signup">
+                    {{ signup_form.hidden_tag() }}
+                    <div class="col-md-6">
+                        {{ signup_form.first_name.label(class="form-label") }}
+                        {{ signup_form.first_name(class="form-control") }}
+                        {% for error in signup_form.first_name.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        {{ signup_form.last_name.label(class="form-label") }}
+                        {{ signup_form.last_name(class="form-control") }}
+                        {% for error in signup_form.last_name.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        {{ signup_form.username.label(class="form-label") }}
+                        {{ signup_form.username(class="form-control") }}
+                        {% for error in signup_form.username.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        {{ signup_form.email.label(class="form-label") }}
+                        {{ signup_form.email(class="form-control") }}
+                        {% for error in signup_form.email.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        {{ signup_form.password.label(class="form-label") }}
+                        {{ signup_form.password(class="form-control") }}
+                        {% for error in signup_form.password.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        {{ signup_form.confirm_password.label(class="form-label") }}
+                        {{ signup_form.confirm_password(class="form-control") }}
+                        {% for error in signup_form.confirm_password.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                
+                    <div>
+                        {{ signup_form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--
+<div class="container vh-100 d-flex justify-content-center align-items-center">
+
+
+</div>
+-->
