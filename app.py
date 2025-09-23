@@ -1,10 +1,11 @@
 import os
+from datetime import timedelta
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from flask_wtf import CSRFProtect
-from sqlalchemy import or_, func
+from sqlalchemy import select, or_, func
 from sqlalchemy.exc import SQLAlchemyError
 
 from forms import LoginForm, SignUpForm
@@ -18,6 +19,7 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
+    app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=7)
 
     login_manager.init_app(app)
     login_manager.login_view = 'login'
@@ -54,9 +56,10 @@ def login():
         if form_type == 'login' and login_form.validate_on_submit():
             identifier = login_form.identifier.data.strip()
 
-            user = User.query.filter(or_(User.username == identifier, func.lower(User.email) == identifier.lower())).first()
+            stmt = select(User).where(or_(User.username == identifier, func.lower(User.email) == identifier.lower()))
+            user = db.session.execute(stmt).scalar_one_or_none()
             if user and check_password_hash(user.password, login_form.password.data):
-                login_user(user)
+                login_user(user, remember=login_form.remember.data)
                 flash('Logged in successfully.', 'success')
                 return redirect(url_for('dashboard'))
             else:
@@ -64,12 +67,12 @@ def login():
                 return redirect(url_for('login'))
         
         elif form_type =='signup' and signup_form.validate_on_submit():
-            existing_user = User.query.filter_by(username=signup_form.username.data).first()
+            existing_user = db.session.execute(select(User).where(func.lower(User.username) == signup_form.username.data.lower())).scalar_one_or_none()
             if existing_user:
                 flash('Username already taken.', 'danger')
                 return render_template('login.html', login_form=login_form, signup_form=signup_form)
             
-            existing_email = User.query.filter_by(email=signup_form.email.data.lower()).first()
+            existing_email = db.session.execute(select(User).where(func.lower(User.email) == signup_form.email.data.lower())).scalar_one_or_none()
             if existing_email:
                 flash('Email already registered. Please log in.', 'danger')
                 return redirect(url_for('login'))
@@ -78,7 +81,7 @@ def login():
                 first_name=signup_form.first_name.data.strip(),
                 last_name=signup_form.last_name.data.strip(),
                 username=signup_form.username.data,
-                email=signup_form.email.data.lower(),
+                email=signup_form.email.data.strip().lower(),
                 password=generate_password_hash(signup_form.password.data)
             )
 

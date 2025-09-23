@@ -1,11 +1,12 @@
 from flask_wtf import FlaskForm
-from wtforms import HiddenField, StringField, PasswordField, SubmitField
+from wtforms import BooleanField, HiddenField, PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp
 
 class LoginForm(FlaskForm):
     form_type = HiddenField('Form Type', default='login')
     identifier = StringField('Username or Email', validators=[DataRequired(), Length(min=3, max=64)])
     password = PasswordField('Password', validators=[DataRequired()])
+    remember = BooleanField('Remember me')
     submit = SubmitField('Log In')
 
 class SignUpForm(FlaskForm):
@@ -13,7 +14,11 @@ class SignUpForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired(), Length(min=1, max=64)])
     last_name = StringField('Last Name', validators=[DataRequired(), Length(min=1, max=64)])
     ### consider Regexp for alphabetic validation
-    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=32)])
+    username = StringField('Username', validators=[
+        DataRequired(),
+        Length(min=3, max=32),
+        Regexp(r'^[A-Za-z][A-Za-z0-9]*$', message="Username must be alphanumeric, start with a letter, and have no spaces.")
+    ])
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[
         DataRequired(),
