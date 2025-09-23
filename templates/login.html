@@ -22,9 +22,9 @@
                     {{ login_form.hidden_tag() }}
 
                     <div class="mb-3">
-                        {{ login_form.username.label(class="form-label") }}
-                        {{ login_form.username(class="form-control") }}
-                        {% for error in login_form.username.errors %}
+                        {{ login_form.identifier.label(class="form-label") }}
+                        {{ login_form.identifier(class="form-control") }}
+                        {% for error in login_form.identifier.errors %}
                             <div class="text-danger">{{ error }}</div>
                         {% endfor %}
                     </div>

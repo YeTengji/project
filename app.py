@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from flask_wtf import CSRFProtect
+from sqlalchemy import or_, func
 from sqlalchemy.exc import SQLAlchemyError
 
 from forms import LoginForm, SignUpForm
@@ -38,7 +39,7 @@ def root():
     return redirect(url_for('login'))
 
 # -------- Authentication and Registration Routes --------
-## --- Login
+## --- Login with SignUp Modal
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -51,7 +52,9 @@ def login():
         form_type = request.form.get('form_type')
 
         if form_type == 'login' and login_form.validate_on_submit():
-            user = User.query.filter_by(username=login_form.username.data).first()
+            identifier = login_form.identifier.data.strip()
+
+            user = User.query.filter(or_(User.username == identifier, func.lower(User.email) == identifier.lower())).first()
             if user and check_password_hash(user.password, login_form.password.data):
                 login_user(user)
                 flash('Logged in successfully.', 'success')
@@ -79,6 +82,9 @@ def login():
                 password=generate_password_hash(signup_form.password.data)
             )
 
+            user_theme = UserTheme(theme=signup_form.theme.data)
+            new_user.theme = user_theme
+
             try:
                 db.session.add(new_user)
                 db.session.commit()
@@ -86,13 +92,14 @@ def login():
                 db.session.rollback()
                 print(f"Database error: {e}")
                 flash('Something went wrong. Please try again.', 'danger')
-                return redirect(url_for('signup'))
+                return redirect(url_for('login'))
             
             flash('Account created successfully. Please log in.', 'success')
             return redirect(url_for('login'))
         
     return render_template('login.html', login_form=login_form, signup_form=signup_form)
 
+# -------- User Routes --------
 ## --- Logout ---
 @app.route('/logout')
 @login_required
@@ -102,7 +109,6 @@ def logout():
 
     return redirect(url_for('login'))
 
-# -------- User Routes --------
 ## --- Theme Update ---
 @app.route('/update-theme', methods=['POST'])
 @login_required

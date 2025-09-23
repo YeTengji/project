@@ -22,11 +22,17 @@ function themeSwitcher() {
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         html.setAttribute('data-bs-theme', newTheme);
 
-        // Optional: update button style or icon
-        toggleBtn.classList.toggle('btn-dark');
-        toggleBtn.classList.toggle('btn-light');
+        // Update Icon Color
+        toggleBtn.classList.remove('btn-dark', 'btn-light');
+        toggleBtn.classList.add(newTheme === 'dark' ? 'btn-light' : 'btn-dark');
 
-        // Optional: send theme to backend via fetch
+        const signUpForm = document.querySelector('#signUpModal form');
+        const themeInput = signUpForm?.querySelector('[name="theme"]');
+        if (themeInput) {
+            themeInput.value = newTheme;
+        }
+
+        // Send Theme to App
         if (isAuthenticated === true) {
             fetch('/update-theme', {
             method: 'POST',
