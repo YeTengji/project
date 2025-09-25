@@ -23,10 +23,18 @@ def create_app():
 
     login_manager.init_app(app)
     login_manager.login_view = 'login'
+    login_manager.login_message = "Please sign in to continue."
+    login_manager.login_message_category = "warning"
     db.init_app(app)
     csrf.init_app(app)
     with app.app_context():
         db.create_all()
+
+    @app.route('/')
+    def root():
+        if current_user.is_authenticated:
+            return redirect(url_for('dashboard'))
+        return redirect(url_for('login'))
 
     return app
 
@@ -36,12 +44,7 @@ app = create_app()
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-@app.route('/')
-def root():
-    return redirect(url_for('login'))
-
-# -------- Authentication and Registration Routes --------
-## --- Login with SignUp Modal
+# -------- Authentication and Registration Route --------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -103,7 +106,6 @@ def login():
     return render_template('login.html', login_form=login_form, signup_form=signup_form)
 
 # -------- User Routes --------
-## --- Logout ---
 @app.route('/logout')
 @login_required
 def logout():
@@ -112,7 +114,6 @@ def logout():
 
     return redirect(url_for('login'))
 
-## --- Theme Update ---
 @app.route('/update-theme', methods=['POST'])
 @login_required
 def update_theme():
@@ -122,7 +123,7 @@ def update_theme():
     if new_theme not in ['light', 'dark']:
         return jsonify({'error': 'Invalid theme'}), 400
     
-    user_theme = UserTheme.query.filter_by(user_id=current_user.id).first()
+    user_theme = db.session.execute(select(UserTheme).where(UserTheme.user_id == current_user.id)).scalar_one_or_none()
     if user_theme:
         user_theme.theme = new_theme
     else:
@@ -136,12 +137,15 @@ def update_theme():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-## --- Dashboard Route ---
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
     return render_template('dashboard.html')
 
+@app.route('/user-profile', methods=['GET', 'POST'])
+@login_required
+def user_profile():
+    return render_template('user_profile.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
