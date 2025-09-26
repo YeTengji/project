@@ -1,6 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, HiddenField, PasswordField, StringField, SubmitField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, ValidationError
+from flask_login import current_user
+from sqlalchemy import func, select
+from models import db, User
 
 class LoginForm(FlaskForm):
     form_type = HiddenField('Form Type', default='login')
@@ -32,13 +35,26 @@ class SignUpForm(FlaskForm):
     theme = HiddenField('Theme', default='dark')
     submit = SubmitField('Sign Up')
 
-    class UserProfileForm(FlaskForm):
-        form_type = HiddenField('Form Type', default='user-profile')
-        first_name = StringField('First Name', validators=[DataRequired(), Length(min=1, max=64)])
-        last_name = StringField('Last Name', validators=[DataRequired(), Length(min=1, max=64)])
-        username = StringField('Username', validators=[
-            DataRequired(),
-            Length(min=3, max=32),
-            Regexp(r'^[A-Za-z][A-Za-z0-9]*$', message="Username must be alphanumeric, start with a letter, and have no spaces.")
-            ])
-        email = StringField('Email', validators=[DataRequired(), Email()])
+    def validate_username(self, field):
+        stmt = select(User).where(func.lower(User.username) == field.data.lower())
+        user = db.session.execute(stmt).scalar_one_or_none()
+        if user:
+            raise ValidationError("Invalid username.")
+
+class UserProfileForm(FlaskForm):
+    form_type = HiddenField('Form Type', default='user-profile')
+    first_name = StringField('First Name', validators=[DataRequired(), Length(min=1, max=64)])
+    last_name = StringField('Last Name', validators=[DataRequired(), Length(min=1, max=64)])
+    username = StringField('Username', validators=[
+        DataRequired(),
+        Length(min=3, max=32),
+        Regexp(r'^[A-Za-z][A-Za-z0-9]*$', message="Username must be alphanumeric, start with a letter, and have no spaces.")
+        ])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Update')
+
+    def validate_username(self, field):
+        stmt = select(User).where(func.lower(User.username) == field.data.lower())
+        user = db.session.execute(stmt).scalar_one_or_none()
+        if user and user.id != current_user.id:
+            raise ValidationError("Please create a diffrenent username.")

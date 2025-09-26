@@ -8,8 +8,9 @@ from flask_wtf import CSRFProtect
 from sqlalchemy import select, or_, func
 from sqlalchemy.exc import SQLAlchemyError
 
-from forms import LoginForm, SignUpForm
 from models import db, User, UserTheme
+from forms import LoginForm, SignUpForm, UserProfileForm
+from context import inject_user_profile_form
 
 load_dotenv()
 login_manager = LoginManager()
@@ -27,6 +28,14 @@ def create_app():
     login_manager.login_message_category = "warning"
     db.init_app(app)
     csrf.init_app(app)
+    
+    '''
+    if code generates multiple context processors, use the following loop
+    for processor in [processor1, processor2, processor3]:
+        app.context_processor(processor)
+    '''
+    app.context_processor(inject_user_profile_form)
+
     with app.app_context():
         db.create_all()
 
@@ -70,11 +79,6 @@ def login():
                 return redirect(url_for('login'))
         
         elif form_type =='signup' and signup_form.validate_on_submit():
-            existing_user = db.session.execute(select(User).where(func.lower(User.username) == signup_form.username.data.lower())).scalar_one_or_none()
-            if existing_user:
-                flash('Username already taken.', 'danger')
-                return render_template('login.html', login_form=login_form, signup_form=signup_form)
-            
             existing_email = db.session.execute(select(User).where(func.lower(User.email) == signup_form.email.data.lower())).scalar_one_or_none()
             if existing_email:
                 flash('Email already registered. Please log in.', 'danger')
@@ -145,7 +149,33 @@ def dashboard():
 @app.route('/user-profile', methods=['GET', 'POST'])
 @login_required
 def user_profile():
-    return render_template('user_profile.html')
+    form = UserProfileForm()
+
+    if form.validate_on_submit():
+
+        unchanged = (
+            form.first_name.data == current_user.first_name and
+            form.last_name.data == current_user.last_name and
+            form.username.data == current_user.username and
+            form.email.data == current_user.email
+        )
+
+        if unchanged:
+            flash("No changes detected.", "info")
+            return redirect(url_for('dashboard'))
+
+        current_user.first_name = form.first_name.data
+        current_user.last_name = form.last_name.data
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        db.session.commit()
+
+        flash("Profile updated!", "success")
+        return redirect(url_for('dashboard'))
+    
+    return render_template('dashboard.html', user_profile_form=form, show_modal=True)
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

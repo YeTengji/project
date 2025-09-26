@@ -1,0 +1,55 @@
+<div class="modal fade" id="userProfileModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="userProfileModalLabel" aria-hidden="true">
+    <input type="hidden" id="showUserProfileModal" value="{{ 'true' if show_modal else 'false' }}">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content p-5">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="userProfileModalLabel">Profile</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if user_profile_form %}
+                <form class="row g-3" method="POST" action="{{ url_for('user_profile') }}">
+                    {{ user_profile_form.hidden_tag() }}
+
+                    <div class="col-md-6">
+                        {{ user_profile_form.first_name.label(class="form-label") }}
+                        {{ user_profile_form.first_name(class="form-control") }}
+                        {% for error in user_profile_form.first_name.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        {{ user_profile_form.last_name.label(class="form-label") }}
+                        {{ user_profile_form.last_name(class="form-control") }}
+                        {% for error in user_profile_form.last_name.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        {{ user_profile_form.username.label(class="form-label") }}
+                        {{ user_profile_form.username(class="form-control") }}
+                        {% for error in user_profile_form.username.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        {{ user_profile_form.email.label(class="form-label") }}
+                        {{ user_profile_form.email(class="form-control") }}
+                        {% for error in user_profile_form.email.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div>
+                        {{ user_profile_form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

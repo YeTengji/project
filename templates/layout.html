@@ -33,7 +33,7 @@
                                     {{ current_user.first_name + " " + current_user.last_name}}
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#">Profile</a></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#userProfileModal">Profile</a></li>
                                     <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
                                 </ul>
                             </div>
@@ -50,6 +50,8 @@
     </header>
 
     {% block body %}{% endblock %}
+
+    {%include ('components/_user_profile_modal.html') %}
 
     <!-- Flash Messages-->
     <div id="bottom-alert-container" class="position-fixed bottom-0 start-50 translate-middle-x mb-5 z-3"
