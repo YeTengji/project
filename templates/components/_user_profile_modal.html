@@ -5,7 +5,8 @@
         <div class="modal-content p-5">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="userProfileModalLabel">Profile</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                {% include 'components/_theme_toggle.html' %}
+                <!-- button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button -->
             </div>
             <div class="modal-body">
                 {% if user_profile_form %}
