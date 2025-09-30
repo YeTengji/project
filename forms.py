@@ -58,3 +58,31 @@ class UserProfileForm(FlaskForm):
         user = db.session.execute(stmt).scalar_one_or_none()
         if user and user.id != current_user.id:
             raise ValidationError("Please create a diffrenent username.")
+        
+class ForgotPasswordForm(FlaskForm):
+    form_type = HiddenField('Form Type', default='forgot-password')
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Send Code')
+
+class VerifyPasswordResetCodeForm(FlaskForm):
+    form_type = HiddenField('Form Type', default='verify-password-reset-code')
+    code = StringField('Reset Code', validators=[
+        DataRequired(),
+        Length(min=6, max=6, message="Code must be 6 characters."),
+        Regexp(r'^[A-Z0-9]{6}$', message="Invalid code.")
+        ])
+    submit = SubmitField('Verify Code')
+
+class ResetPasswordForm(FlaskForm):
+    form_type = HiddenField('Form Type', default='reset-password')
+    password = PasswordField('Password', validators=[
+        DataRequired(),
+        Length(min=8, message="Password must be at least 8 characters."),
+        Regexp(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?]).+$',
+            message="Password must include a capital letter, a number, and a special character.")
+        ])
+    confirm_password = PasswordField('Confirm Password', validators=[
+        DataRequired(),
+        EqualTo('password', message='Passwords must match')
+        ])
+    submit = SubmitField('Reset Password')

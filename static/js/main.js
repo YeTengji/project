@@ -46,11 +46,11 @@ function themeSwitcher() {
     });
 }
 
-// Show User Profile Modal If Errors
-function showUserProfileModal() {
-    const showModal = document.getElementById('showUserProfileModal');
+// Modal Control
+function showModal(triggerID, modalID) {
+    const showModal = document.getElementById(triggerID);
     if (showModal && showModal.value === 'true') {
-        const modalElement = document.getElementById('userProfileModal');
+        const modalElement = document.getElementById(modalID);
         const modal = new bootstrap.Modal(modalElement);
         modal.show()
     }
@@ -59,5 +59,5 @@ function showUserProfileModal() {
 document.addEventListener("DOMContentLoaded", () => {
     autoDismissAlerts();
     themeSwitcher();
-    showUserProfileModal();
+    showModal('showUserProfileModal', 'userProfileModal');
 });

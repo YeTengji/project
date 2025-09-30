@@ -1,16 +1,18 @@
 import os
-from datetime import timedelta
+import logging
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
+from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, session
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from flask_wtf import CSRFProtect
 from sqlalchemy import select, or_, func
 from sqlalchemy.exc import SQLAlchemyError
 
-from models import db, User, UserTheme
-from forms import LoginForm, SignUpForm, UserProfileForm
+from models import db, User, UserTheme, ResetCode
+from forms import ForgotPasswordForm, LoginForm, ResetPasswordForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
 from context import inject_user_profile_form
+from helpers import generate_secure_code
 
 load_dotenv()
 login_manager = LoginManager()
@@ -53,7 +55,7 @@ app = create_app()
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-# -------- Authentication and Registration Route --------
+#region --- Authentication and Registration Routes ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -62,9 +64,13 @@ def login():
     login_form = LoginForm()
     signup_form = SignUpForm()
 
+    forms = {
+        'login_form': login_form,
+        'signup_form': signup_form,
+    }
+
     if request.method == 'POST':
         form_type = request.form.get('form_type')
-
         if form_type == 'login' and login_form.validate_on_submit():
             identifier = login_form.identifier.data.strip()
 
@@ -100,14 +106,108 @@ def login():
                 db.session.commit()
             except SQLAlchemyError as e:
                 db.session.rollback()
-                print(f"Database error: {e}")
-                flash('Something went wrong. Please try again.', 'danger')
+                logging.error(f"Sign up database error: {e}")
+                flash('Something went wrong. Please contact support.', 'danger')
                 return redirect(url_for('login'))
             
             flash('Account created successfully. Please log in.', 'success')
             return redirect(url_for('login'))
         
-    return render_template('login.html', login_form=login_form, signup_form=signup_form)
+    return render_template('login.html', **forms)
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    forgot_password_form = ForgotPasswordForm()
+
+    if request.method == 'POST':
+        if forgot_password_form.validate_on_submit():
+            existing_email = db.session.execute(select(User).where(
+                func.lower(User.email) == forgot_password_form.email.data.lower()
+                )
+            ).scalar_one_or_none()
+
+            if existing_email:
+                now = datetime.now(timezone.utc)
+                validity = timedelta(minutes=15)
+
+                recent_code = db.session.execute(select(ResetCode).where(
+                    ResetCode.user_id == existing_email.id,
+                    ResetCode.requested > now - validity,
+                    ResetCode.used.is_(False)
+                    )
+                ).scalar_one_or_none()
+
+                if recent_code:
+                    flash('A code was sent previously. Please check your email messages', 'warning')
+                    return redirect(url_for('forgot_password'))
+
+                reset_code = ResetCode(
+                    user_id = existing_email.id,
+                    code=generate_secure_code(),
+                    requested=now,
+                    expiration=now + validity
+                )
+
+                try:
+                    db.session.add(reset_code)
+                    db.session.commit()
+                except SQLAlchemyError as e:
+                    logging.error(f"Reset code database error: {e}")
+                    flash('Something went wrong. Please contact support.', 'danger')
+                    return redirect(url_for('forgot_password'))
+
+            flash('Please check your email for further instructions.', 'info')
+            return redirect(url_for('verify_password_reset_code'))
+                
+    return render_template('forgot_password.html', forgot_password_form=forgot_password_form)
+
+@app.route('/verify-password-reset-code', methods=['GET', 'POST'])
+def verify_password_reset_code():
+    verify_password_reset_code_form = VerifyPasswordResetCodeForm()
+
+    if request.method == 'POST':
+        if verify_password_reset_code_form.validate_on_submit():
+            print('here!')
+            code = db.session.execute(select(ResetCode).where(
+                ResetCode.code == verify_password_reset_code_form.code.data
+                )
+            ).scalar_one_or_none()
+
+            if code and code.expiration > datetime.now(timezone.utc):
+                session['code_verified_user_id'] = code.user_id
+                code.used = True
+                db.session.commit()
+                return redirect(url_for('reset_password'))
+            else:
+                print('no')
+                flash('Invalid code.', 'danger')
+                return redirect(url_for('verify_password_reset_code'))
+            
+    return render_template('verify_password_reset_code.html', verify_password_reset_code_form=verify_password_reset_code_form)
+
+@app.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    user_id = session.get('code_verified_user_id')
+    if not user_id:
+        session.pop('code_verified_user_id', None)
+        flash('Unauthorized.', 'danger')
+        return redirect(url_for('login'))
+
+    reset_password_form = ResetPasswordForm()
+
+    if request.method == 'POST':
+        if reset_password_form.validate_on_submit():
+            user = db.session.get(User, user_id)
+            user.password = generate_password_hash(reset_password_form.password.data)
+            db.session.commit()
+
+            session.pop('code_verified_user_id', None)
+
+            flash('Password reset successful. Please log in.', 'success')
+            return redirect(url_for('login'))
+    return render_template('reset_password.html', reset_password_form=reset_password_form)
+
+#endregion --------
 
 # -------- User Routes --------
 @app.route('/logout')
@@ -173,7 +273,7 @@ def user_profile():
         flash("Profile updated!", "success")
         return redirect(url_for('dashboard'))
     
-    return render_template('dashboard.html', user_profile_form=form, show_modal=True)
+    return render_template('dashboard.html', user_profile_form=form, show_user_profile_modal=True)
 
 
 

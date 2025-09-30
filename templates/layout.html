@@ -20,10 +20,10 @@
                     data-bs-target="#navbarsExample11" aria-controls="navbarsExample11" aria-expanded="false"
                     aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button>
                 <div class="collapse navbar-collapse d-lg-flex" id="navbarsExample11"> <a class="navbar-brand col-lg-3 me-0"
-                        href="#">I.G.K.H.</a>
+                        href="/">I.G.K.H.</a>
                     {% if current_user.is_authenticated %}
                         <ul class="navbar-nav col-lg-6 justify-content-lg-center">
-                            <li class="nav-item"> <a class="nav-link active" aria-current="page" href="#">Home</a> </li>
+                            <li class="nav-item"> <a class="nav-link active" aria-current="page" href="">Home</a> </li>
                             <li class="nav-item"> <a class="nav-link" href="#">Week</a> </li>
                             <li class="nav-item"> <a class="nav-link" href="#">Upkeep</a> </li>
                         </ul>
@@ -51,7 +51,9 @@
 
     {% block body %}{% endblock %}
 
+    {% if current_user.is_authenticated %}
     {%include ('components/_user_profile_modal.html') %}
+    {% endif %}
 
     <!-- Flash Messages-->
     <div id="bottom-alert-container" class="position-fixed bottom-0 start-50 translate-middle-x mb-5 z-3"
