@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+from typing import List
+from werkzeug.security import check_password_hash
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, DateTime, ForeignKey
@@ -22,6 +24,11 @@ class User(db.Model, UserMixin):
     update_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     theme = relationship('UserTheme', back_populates='user', cascade='all, delete-orphan', uselist=False)
     reset_codes = relationship('ResetCode', back_populates='user', cascade='all, delete-orphan')
+    previous_passwords: Mapped[List['PreviousPassword']] = relationship(back_populates='user', cascade='all, delete-orphan')
+
+    def has_used_password(self, raw_password: str, limit: int = 5) -> bool:
+        recent = sorted(self.previous_passwords, key=lambda p: p.change_date, reverse=True)[:limit]
+        return any(check_password_hash(p.previous_password, raw_password) for p in recent)
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -47,6 +54,15 @@ class ResetCode(db.Model):
 
     def is_expired(self) -> bool:
         return datetime.now(timezone.utc) > self.expiration
+
+class PreviousPassword(db.Model):
+    __tablename__ = 'previous_passwords'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
+    previous_password: Mapped[str] = mapped_column(String(256),nullable=False)
+    change_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    user: Mapped['User'] = relationship(back_populates='previous_passwords')
 
 
 

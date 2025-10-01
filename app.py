@@ -9,8 +9,8 @@ from flask_wtf import CSRFProtect
 from sqlalchemy import select, or_, func
 from sqlalchemy.exc import SQLAlchemyError
 
-from models import db, User, UserTheme, ResetCode
-from forms import ForgotPasswordForm, LoginForm, ResetPasswordForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
+from models import db, PreviousPassword, ResetCode, User, UserTheme
+from forms import ChangePasswordForm, ForgotPasswordForm, LoginForm, ResetPasswordForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
 from context import inject_user_profile_form
 from helpers import generate_secure_code
 
@@ -198,7 +198,22 @@ def reset_password():
     if request.method == 'POST':
         if reset_password_form.validate_on_submit():
             user = db.session.get(User, user_id)
+
+            if user.has_used_password(reset_password_form.password.data):
+                flash('This password has been used in the past. Please create a different password.', 'danger')
+                return render_template('reset_password.html', reset_password_form=reset_password_form)
+
+            db.session.add(PreviousPassword(
+                user_id=user.id,
+                previous_password=user.password,
+                change_date=datetime.now(timezone.utc)
+            ))
             user.password = generate_password_hash(reset_password_form.password.data)
+            db.session.commit()
+            db.session.refresh(user)
+            if len(user.previous_passwords) > 5:
+                for p in sorted(user.previous_passwords, key=lambda p: p.change_date)[:-5]:
+                    db.session.delete(p)
             db.session.commit()
 
             session.pop('code_verified_user_id', None)
@@ -249,31 +264,67 @@ def dashboard():
 @app.route('/user-profile', methods=['GET', 'POST'])
 @login_required
 def user_profile():
-    form = UserProfileForm()
+    user_profile_form = UserProfileForm()
 
-    if form.validate_on_submit():
+    if user_profile_form.validate_on_submit():
 
         unchanged = (
-            form.first_name.data == current_user.first_name and
-            form.last_name.data == current_user.last_name and
-            form.username.data == current_user.username and
-            form.email.data == current_user.email
+            user_profile_form.first_name.data == current_user.first_name and
+            user_profile_form.last_name.data == current_user.last_name and
+            user_profile_form.username.data == current_user.username and
+            user_profile_form.email.data == current_user.email
         )
 
         if unchanged:
             flash("No changes detected.", "info")
             return redirect(url_for('dashboard'))
 
-        current_user.first_name = form.first_name.data
-        current_user.last_name = form.last_name.data
-        current_user.username = form.username.data
-        current_user.email = form.email.data
+        current_user.first_name = user_profile_form.first_name.data
+        current_user.last_name = user_profile_form.last_name.data
+        current_user.username = user_profile_form.username.data
+        current_user.email = user_profile_form.email.data
         db.session.commit()
 
         flash("Profile updated!", "success")
         return redirect(url_for('dashboard'))
     
-    return render_template('dashboard.html', user_profile_form=form, show_user_profile_modal=True)
+    return render_template('dashboard.html', user_profile_form=user_profile_form, show_user_profile_modal=True)
+
+@app.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    change_password_form = ChangePasswordForm()
+
+    if change_password_form.validate_on_submit():
+        user = current_user
+        if not check_password_hash(user.password, change_password_form.current_password.data):
+            flash('Incorrect current password.', 'danger')
+            return render_template('change_password.html', change_password_form=change_password_form)
+
+        if user.has_used_password(change_password_form.password.data):
+            flash('Please choose a different password.', 'danger')
+            change_password_form.password.data = ''
+            change_password_form.confirm_password.data = ''
+            return render_template('change_password.html', change_password_form=change_password_form)
+        
+        db.session.add(PreviousPassword(
+            user_id=user.id,
+            previous_password=user.password,
+            change_date=datetime.now(timezone.utc)
+        ))
+
+        user.password = generate_password_hash(change_password_form.password.data)
+        db.session.commit()
+        db.session.refresh(user)
+        if len(user.previous_passwords) > 5:
+            for p in sorted(user.previous_passwords, key=lambda p: p.change_date)[:-5]:
+                db.session.delete(p)
+        db.session.commit()
+
+        flash('Password changed successfully.', 'success')
+        return redirect(url_for('dashboard'))
+
+    return render_template('change_password.html', change_password_form=change_password_form)
 
 
 

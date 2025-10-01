@@ -86,3 +86,8 @@ class ResetPasswordForm(FlaskForm):
         EqualTo('password', message='Passwords must match')
         ])
     submit = SubmitField('Reset Password')
+
+class ChangePasswordForm(ResetPasswordForm):
+    form_type = HiddenField('Form Type', default='change-password')
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+    submit = SubmitField('Change Password')
