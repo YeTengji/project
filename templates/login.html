@@ -12,7 +12,7 @@
         </div>
 
         <div class="col-md-5 d-flex">
-            <div class="container border rounded p-5 w-100">
+            <div id="loginFormBlock" class="container border rounded p-5 w-100">
                 <div class="mb-3">
                     <h3>Welcome!</h3> 
                 </div>
@@ -25,16 +25,17 @@
                     {{ login_form.hidden_tag() }}
 
                     <div class="mb-3">
-                        {{ login_form.identifier.label(class="form-label") }}
                         {{ login_form.identifier(class="form-control") }}
                         {% for error in login_form.identifier.errors %}
                             <div class="text-danger">{{ error }}</div>
                         {% endfor %}
                     </div>
 
-                    <div class="mb-3">
-                        {{ login_form.password.label(class="form-label") }}
-                        {{ login_form.password(class="form-control") }}
+                    <div class="input-group mb-3">
+                        {{ login_form.password(class="form-control", id="login-form-password") }}
+                        <span class="input-group-text" onclick="togglePasswordVisibility('login-form-password', 'toggle-login-form-password')" style="cursor:pointer;">
+                            <i class="bi bi-eye" id="toggle-login-form-password"></i>
+                        </span>
                         {% for error in login_form.password.errors %}
                             <div class="text-danger">{{ error }} </div>
                         {% endfor %}

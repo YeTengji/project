@@ -78,6 +78,8 @@ def login():
             user = db.session.execute(stmt).scalar_one_or_none()
             if user and check_password_hash(user.password, login_form.password.data):
                 login_user(user, remember=login_form.remember.data)
+                user.theme.theme = login_form.theme.data
+                db.session.commit()
                 flash('Logged in successfully.', 'success')
                 return redirect(url_for('dashboard'))
             else:

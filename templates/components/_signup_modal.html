@@ -40,17 +40,31 @@
                     </div>
                     <div class="col-md-6">
                         {{ signup_form.password.label(class="form-label") }}
-                        {{ signup_form.password(class="form-control") }}
+                        <div class="input-group">
+                        {{ signup_form.password(class="form-control", id="signup-form-password") }}
+                            <span class="input-group-text"
+                                onclick="togglePasswordVisibility('signup-form-password', 'toggle-signup-form-password')"
+                                style="cursor:pointer;">
+                                <i class="bi bi-eye" id="toggle-signup-form-password"></i>
+                            </span>
                         {% for error in signup_form.password.errors %}
                         <div class="text-danger">{{ error }}</div>
                         {% endfor %}
+                        </div>
                     </div>
                     <div class="col-md-6">
                         {{ signup_form.confirm_password.label(class="form-label") }}
-                        {{ signup_form.confirm_password(class="form-control") }}
+                        <div class="input-group">
+                        {{ signup_form.confirm_password(class="form-control", id="signup-form-confirm-password") }}
+                            <span class="input-group-text"
+                                onclick="togglePasswordVisibility('signup-form-confirm-password', 'toggle-signup-form-confirm-password')"
+                                style="cursor:pointer;">
+                                <i class="bi bi-eye" id="toggle-signup-form-confirm-password"></i>
+                            </span>
                         {% for error in signup_form.confirm_password.errors %}
                         <div class="text-danger">{{ error }}</div>
                         {% endfor %}
+                        </div>
                     </div>
                 
                     <div>

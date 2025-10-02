@@ -27,13 +27,17 @@ function themeSwitcher() {
         toggleBtn.classList.add(newTheme === 'dark' ? 'btn-light' : 'btn-dark');
 
         const signUpForm = document.querySelector('#signUpModal form');
-        const themeInput = signUpForm?.querySelector('[name="theme"]');
-        if (themeInput) {
-            themeInput.value = newTheme;
+        const signUpThemeInput = signUpForm?.querySelector('[name="theme"]');
+        const loginForm = document.querySelector('#loginFormBlock form')
+        const loginThemeInput = loginForm?.querySelector('[name="theme"]');
+        if (signUpThemeInput) {
+            signUpThemeInput.value = newTheme;
+        } else if (loginThemeInput) {
+            loginThemeInput.value = newTheme;
         }
 
         // Send Theme to App
-        if (isAuthenticated === true) {
+        if (isAuthenticated) {
             fetch('/update-theme', {
             method: 'POST',
             headers: {
@@ -56,6 +60,17 @@ function showModal(triggerID, modalID) {
     }
 }
 
+// Toggle Password Visibility
+function togglePasswordVisibility(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    const isHidden = input.type === "password";
+
+    input.type = isHidden ? "text" : "password";
+    icon.className = isHidden ? "bi-eye-slash" : "bi bi-eye";
+}
+
+// Main?
 document.addEventListener("DOMContentLoaded", () => {
     autoDismissAlerts();
     themeSwitcher();

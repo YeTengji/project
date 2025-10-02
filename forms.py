@@ -7,9 +7,10 @@ from models import db, User
 
 class LoginForm(FlaskForm):
     form_type = HiddenField('Form Type', default='login')
-    identifier = StringField('Username or Email', validators=[DataRequired(), Length(min=3, max=64)])
-    password = PasswordField('Password', validators=[DataRequired()])
+    identifier = StringField('Username or Email', validators=[DataRequired(), Length(min=3, max=64)], render_kw={"placeholder": "Username or Email"})
+    password = PasswordField('Password', validators=[DataRequired()], render_kw={"placeholder": "Password"})
     remember = BooleanField('Remember me')
+    theme = HiddenField('Theme')
     submit = SubmitField('Log In')
 
 class SignUpForm(FlaskForm):
