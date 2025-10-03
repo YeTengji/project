@@ -1,18 +1,20 @@
 import os
 import logging
+
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, session
 from flask_login import LoginManager, login_required, login_user, logout_user, current_user
 from flask_wtf import CSRFProtect
+
 from sqlalchemy import select, or_, func
 from sqlalchemy.exc import SQLAlchemyError
 
 from models import db, PreviousPassword, ResetCode, User, UserTheme
 from forms import ChangePasswordForm, ForgotPasswordForm, LoginForm, ResetPasswordForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
-from context import inject_user_profile_form
-from helpers import generate_secure_code
+from context import inject_theme_from_cookie, inject_user_profile_form
+from helpers import mail, generate_secure_code, send_reset_code_email
 
 load_dotenv()
 login_manager = LoginManager()
@@ -20,15 +22,24 @@ csrf = CSRFProtect()
 
 def create_app():
     app = Flask(__name__)
+    app.config['APP_NAME'] = 'I.G.K.H.'
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=7)
+    # Email Information
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
 
     login_manager.init_app(app)
     login_manager.login_view = 'login'
     login_manager.login_message = "Please sign in to continue."
     login_manager.login_message_category = "warning"
     db.init_app(app)
+    mail.init_app(app)
     csrf.init_app(app)
     
     '''
@@ -36,7 +47,8 @@ def create_app():
     for processor in [processor1, processor2, processor3]:
         app.context_processor(processor)
     '''
-    app.context_processor(inject_user_profile_form)
+    for processor in [inject_theme_from_cookie, inject_user_profile_form]:
+        app.context_processor(processor)
 
     with app.app_context():
         db.create_all()
@@ -153,6 +165,7 @@ def forgot_password():
                 try:
                     db.session.add(reset_code)
                     db.session.commit()
+                    send_reset_code_email(existing_email.email, reset_code.code)
                 except SQLAlchemyError as e:
                     logging.error(f"Reset code database error: {e}")
                     flash('Something went wrong. Please contact support.', 'danger')
@@ -201,8 +214,8 @@ def reset_password():
         if reset_password_form.validate_on_submit():
             user = db.session.get(User, user_id)
 
-            if user.has_used_password(reset_password_form.password.data):
-                flash('This password has been used in the past. Please create a different password.', 'danger')
+            if user.has_used_password(reset_password_form.password.data) or check_password_hash (user.password, reset_password_form.password.data):
+                flash('Please create a different password.', 'danger')
                 return render_template('reset_password.html', reset_password_form=reset_password_form)
 
             db.session.add(PreviousPassword(
@@ -303,7 +316,7 @@ def change_password():
             flash('Incorrect current password.', 'danger')
             return render_template('change_password.html', change_password_form=change_password_form)
 
-        if user.has_used_password(change_password_form.password.data):
+        if user.has_used_password(change_password_form.password.data) or check_password_hash (user.password, change_password_form.password.data):
             flash('Please choose a different password.', 'danger')
             change_password_form.password.data = ''
             change_password_form.confirm_password.data = ''

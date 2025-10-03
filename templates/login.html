@@ -46,7 +46,7 @@
                         {{ login_form.remember(class="form-check-input") }}
                     </div>
 
-                    {{ login_form.submit(class="btn btn-primary") }}
+                    {{ login_form.submit(class="btn btn-primary", id="login-submit-button") }}
                 </form>
                 <div class="mt-3">
                     <p><a href="{{ url_for('forgot_password') }}">Forgot Password</a></p>

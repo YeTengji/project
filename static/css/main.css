@@ -1,0 +1,26 @@
+@keyframes idlePulse {
+    0%  { transform: translate(1px); }
+    4% { transform: translate(-2px); }
+    6% { transform: translate(1px, 1px); }
+    8% { transform: translate(-1px); }
+    12%{ transform: translate(1px); }
+}
+
+@keyframes flashAlert {
+    0%  { transform: scale(12); opacity: 0; }
+    16% { transform: scale(1);}
+    32% { opacity: 1; }
+    42% { transform: scale(1); }
+    45% { transform: scale(1.05); }
+    47% { transform: scale(1);}
+}
+
+#theme-toggle {
+    animation: idlePulse 3s infinite;
+    transform-origin: center;
+}
+
+#flash-alert {
+    animation: flashAlert 3s ease-in 1;
+    transform-origin: center;
+}

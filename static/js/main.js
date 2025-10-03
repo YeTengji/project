@@ -1,5 +1,5 @@
 // Flash Alert Auto Dismiss
-function autoDismissAlerts(timeout = 3000) {
+function autoDismissAlerts(timeout = 5000) {
     const alerts = document.querySelectorAll(".alert");
     alerts.forEach(alert => {
         setTimeout(() => {
@@ -10,17 +10,36 @@ function autoDismissAlerts(timeout = 3000) {
     });
 }
 
+// Login Theme
+function loginTheme() {
+    const loginSubmitButton = document.getElementById('login-submit-button');
+    if (!loginSubmitButton) return;
+
+    loginSubmitButton.addEventListener('click', () => {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute('data-bs-theme');
+        const loginForm = document.querySelector('#loginFormBlock form');
+        const loginThemeInput = loginForm?.querySelector('[name="theme"]');
+        if (loginThemeInput) {
+            loginThemeInput.value = currentTheme;
+        }
+    });
+}
+
 // Theme Switcher
 function themeSwitcher() {
     const toggleBtn = document.getElementById('theme-toggle');
     const isAuthenticated = toggleBtn.getAttribute('data-auth') === 'true';
     const csrf_token = toggleBtn.getAttribute('data-csrf');
-    
+    let isSwitching = false;
     toggleBtn.addEventListener('click', () => {
+        if (isSwitching) return;
+        isSwitching = true;
         const html = document.documentElement;
         const currentTheme = html.getAttribute('data-bs-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         html.setAttribute('data-bs-theme', newTheme);
+        document.cookie = `theme=${newTheme}; path=/; max-age=31536000; Secure`;
 
         // Update Icon Color
         toggleBtn.classList.remove('btn-dark', 'btn-light');
@@ -28,12 +47,9 @@ function themeSwitcher() {
 
         const signUpForm = document.querySelector('#signUpModal form');
         const signUpThemeInput = signUpForm?.querySelector('[name="theme"]');
-        const loginForm = document.querySelector('#loginFormBlock form')
-        const loginThemeInput = loginForm?.querySelector('[name="theme"]');
+
         if (signUpThemeInput) {
             signUpThemeInput.value = newTheme;
-        } else if (loginThemeInput) {
-            loginThemeInput.value = newTheme;
         }
 
         // Send Theme to App
@@ -47,6 +63,7 @@ function themeSwitcher() {
             body: JSON.stringify({ theme: newTheme })
             });
         }
+        setTimeout(() => {isSwitching = false; }, 300)
     });
 }
 
@@ -75,4 +92,5 @@ document.addEventListener("DOMContentLoaded", () => {
     autoDismissAlerts();
     themeSwitcher();
     showModal('showUserProfileModal', 'userProfileModal');
+    loginTheme();
 });
