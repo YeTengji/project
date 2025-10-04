@@ -2,9 +2,9 @@ import secrets
 import string
 
 from flask import current_app
-from flask_mail import Mail, Message
+from flask_mail import Message
 
-mail = Mail()
+from extensions import mail
 
 #region --- Functions ---
 # --- Generate Six Character Code ---

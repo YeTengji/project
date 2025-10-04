@@ -6,10 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, DateTime, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-class Base(DeclarativeBase):
-    pass
-
-db = SQLAlchemy(model_class=Base)
+from extensions import db
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'

@@ -5,20 +5,18 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, session
-from flask_login import LoginManager, login_required, login_user, logout_user, current_user
-from flask_wtf import CSRFProtect
+from flask_login import login_required, login_user, logout_user, current_user
 
 from sqlalchemy import select, or_, func
 from sqlalchemy.exc import SQLAlchemyError
 
-from models import db, PreviousPassword, ResetCode, User, UserTheme
-from forms import ChangePasswordForm, ForgotPasswordForm, LoginForm, ResetPasswordForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
 from context import inject_theme_from_cookie, inject_user_profile_form
-from helpers import mail, generate_secure_code, send_reset_code_email
+from extensions import csrf, db, login_manager, mail
+from forms import ChangePasswordForm, ForgotPasswordForm, LoginForm, ResetPasswordForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
+from helpers import generate_secure_code, send_reset_code_email
+from models import PreviousPassword, ResetCode, User, UserTheme
 
 load_dotenv()
-login_manager = LoginManager()
-csrf = CSRFProtect()
 
 def create_app():
     app = Flask(__name__)
