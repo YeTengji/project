@@ -1,5 +1,6 @@
 import os
 import logging
+import pytz
 
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
@@ -107,7 +108,9 @@ def login():
                 last_name=signup_form.last_name.data.strip(),
                 username=signup_form.username.data,
                 email=signup_form.email.data.strip().lower(),
-                password=generate_password_hash(signup_form.password.data)
+                password=generate_password_hash(signup_form.password.data),
+                country=signup_form.country.data,
+                time_zone=signup_form.time_zone.data
             )
 
             user_theme = UserTheme(theme=signup_form.theme.data)
@@ -235,6 +238,18 @@ def reset_password():
             return redirect(url_for('login'))
     return render_template('reset_password.html', reset_password_form=reset_password_form)
 
+@app.route('/get-time-zones', methods=['POST'])
+def get_time_zones():
+    data = request.get_json(force=True)
+    country_code = data.get('country', '').strip().upper()
+    if len(country_code) != 2:
+        return jsonify({'time_zones': [], 'readonly': False}), 400
+    time_zones = pytz.country_timezones.get(country_code.upper(), [])
+    return jsonify({
+        'time_zones': time_zones,
+        'readonly': len(time_zones) == 1
+    })
+
 #endregion --------
 
 # -------- User Routes --------
@@ -285,7 +300,9 @@ def user_profile():
             user_profile_form.first_name.data == current_user.first_name and
             user_profile_form.last_name.data == current_user.last_name and
             user_profile_form.username.data == current_user.username and
-            user_profile_form.email.data == current_user.email
+            user_profile_form.email.data == current_user.email and
+            user_profile_form.country.data == current_user.country and
+            user_profile_form.time_zone.data == current_user.time_zone
         )
 
         if unchanged:
@@ -296,6 +313,8 @@ def user_profile():
         current_user.last_name = user_profile_form.last_name.data
         current_user.username = user_profile_form.username.data
         current_user.email = user_profile_form.email.data
+        current_user.country = user_profile_form.country.data
+        current_user.time_zone = user_profile_form.time_zone.data
         db.session.commit()
 
         flash("Profile updated!", "success")
@@ -339,6 +358,13 @@ def change_password():
 
     return render_template('change_password.html', change_password_form=change_password_form)
 
+@app.route('/week-schedule', methods=['GET', 'POST'])
+@login_required
+def week_schedule():
+
+    if request.method == 'POST':
+        pass
+    return render_template('week_schedule.html')
 
 
 if __name__ == '__main__':

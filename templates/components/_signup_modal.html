@@ -66,6 +66,20 @@
                         {% endfor %}
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        {{ signup_form.country.label(class="form-label") }}
+                        {{ signup_form.country(class="form-control", id="signup-form-country") }}
+                        {% for error in signup_form.country.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        {{ signup_form.time_zone.label(class="form-label") }}
+                        {{ signup_form.time_zone(class="form-control", id="signup-form-time-zone") }}
+                        {% for error in signup_form.time_zone.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
                 
                     <div>
                         {{ signup_form.submit(class="btn btn-primary") }}

@@ -5,6 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Project: {% block title %}{% endblock %}</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -25,9 +26,13 @@
                         href="/">I.G.K.H.</a>
                     {% if current_user.is_authenticated %}
                         <ul class="navbar-nav col-lg-6 justify-content-lg-center">
-                            <li class="nav-item"> <a class="nav-link active" aria-current="page" href="">Home</a> </li>
-                            <li class="nav-item"> <a class="nav-link" href="#">Week</a> </li>
-                            <li class="nav-item"> <a class="nav-link" href="#">Upkeep</a> </li>
+                            {% macro nav_item(endpoint, label) %}
+                            <li class="nav-item"> <a class="nav-link {% if request.endpoint == endpoint %}active{% endif %}" href="{{ url_for(endpoint) }}">{{ label }}</a> </li>
+                            {% endmacro %}
+                            {{ nav_item('dashboard', 'Dashboard') }}
+                            {{ nav_item('week_schedule', 'Week') }}
+                            <!--li class="nav-item"> <a class="nav-link" href="{{ url_for('week_schedule') }}">Week</a> </li>
+                            <li class="nav-item"> <a class="nav-link" href="#">Upkeep</a> </li-->
                         </ul>
                         <div class="d-lg-flex col-lg-3 justify-content-lg-end gap-2">
                             <div class="dropdown">

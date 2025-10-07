@@ -17,6 +17,8 @@ class User(db.Model, UserMixin):
     username: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(256), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(256),nullable=False)
+    country: Mapped[str] = mapped_column(String(2), nullable=False)
+    time_zone: Mapped[str] = mapped_column(String(64), nullable=False)
     creation_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     update_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     theme = relationship('UserTheme', back_populates='user', cascade='all, delete-orphan', uselist=False)

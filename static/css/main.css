@@ -1,3 +1,7 @@
+body {
+    padding-top: 56px;
+}
+
 @keyframes idlePulse {
     0%  { transform: translate(1px); }
     4% { transform: translate(-2px); }
@@ -23,4 +27,8 @@
 #flash-alert {
     animation: flashAlert 3s ease-in 1;
     transform-origin: center;
+}
+
+.login-group {
+    height: calc(100vh - 72px);
 }
