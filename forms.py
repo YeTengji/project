@@ -1,15 +1,22 @@
 import pytz
 import pycountry
 
+from datetime import date
+
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, HiddenField, PasswordField, SelectField, StringField, SubmitField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, ValidationError
+from wtforms import BooleanField, DateField, DateTimeField, HiddenField, PasswordField, SelectField, SelectMultipleField, StringField, SubmitField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, Regexp, ValidationError
+from wtforms.widgets import CheckboxInput, ListWidget
 from flask_login import current_user
 from sqlalchemy import func, select
+
+from helpers import generate_time_choices
 from models import db, User
 
 country_choices = sorted([(c.alpha_2, c.name) for c in pycountry.countries], key=lambda x: x[1])
 timezone_choices = sorted([(tz, tz) for tz in pytz.common_timezones])
+start_time_choices = generate_time_choices()
+end_time_choices = generate_time_choices(end_field=True)
 
 class LoginForm(FlaskForm):
     form_type = HiddenField('Form Type', default='login')
@@ -110,3 +117,38 @@ class ChangePasswordForm(ResetPasswordForm):
     form_type = HiddenField('Form Type', default='change-password')
     current_password = PasswordField('Current Password', validators=[DataRequired()])
     submit = SubmitField('Change Password')
+
+class AddEventForm(FlaskForm):
+    form_type = HiddenField('Form Type', default='add-event')
+    title = StringField('Title', validators=[DataRequired(), Length (min=1, max=24)])
+    notes = StringField('Notes', validators=[DataRequired(), Length(min=1, max=64)])
+    day = DateField('Date', default=date.today, validators=[Optional()])
+    is_monthly = BooleanField('Monthly')
+    is_annual = BooleanField('Annual')
+    day_of_week = SelectMultipleField(
+        'Day(s) of the Week',
+        choices=[
+            ('0', 'Monday'),
+            ('1', 'Tuesday'),
+            ('2', 'Wednesday'),
+            ('3', 'Thursday'),
+            ('4', 'Friday'),
+            ('5', 'Saturday'),
+            ('6', 'Sunday'),
+        ],
+        coerce=int,
+        validators=[Optional()],
+        option_widget=CheckboxInput(),
+        widget=ListWidget(prefix_label=False)
+    )
+    start = SelectField('Start Time', choices=start_time_choices, validators=[DataRequired()])
+    end = SelectField('End Time', choices=end_time_choices, validators=[DataRequired()])
+    color = StringField('Color', default='#0F52BA', render_kw={'type': 'color'}, validators=[DataRequired(), Length(max=7)])
+    submit = SubmitField('Add Event')
+
+    def validate(self, extra_validators=None):
+        is_valid = super().validate(extra_validators)
+        if is_valid and self.day_of_week.data:
+            self.day.data=None
+        return is_valid
+

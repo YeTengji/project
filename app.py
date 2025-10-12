@@ -2,7 +2,7 @@ import os
 import logging
 import pytz
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, session
@@ -10,12 +10,13 @@ from flask_login import login_required, login_user, logout_user, current_user
 
 from sqlalchemy import select, or_, func
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import selectinload
 
 from context import inject_theme_from_cookie, inject_user_profile_form
 from extensions import csrf, db, login_manager, mail
-from forms import ChangePasswordForm, ForgotPasswordForm, LoginForm, ResetPasswordForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
-from helpers import generate_secure_code, send_reset_code_email
-from models import PreviousPassword, ResetCode, User, UserTheme
+from forms import AddEventForm, ChangePasswordForm, ForgotPasswordForm, LoginForm, ResetPasswordForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
+from helpers import database_to_calendarview, generate_secure_code, hex_to_rgba, send_reset_code_email, render_week_schedule
+from models import CalendarEvent, CalendarEventDay, PreviousPassword, ResetCode, User, UserTheme
 
 load_dotenv()
 
@@ -119,13 +120,13 @@ def login():
             try:
                 db.session.add(new_user)
                 db.session.commit()
+                flash('Account created successfully. Please log in.', 'success')
             except SQLAlchemyError as e:
                 db.session.rollback()
                 logging.error(f"Sign up database error: {e}")
                 flash('Something went wrong. Please contact support.', 'danger')
                 return redirect(url_for('login'))
             
-            flash('Account created successfully. Please log in.', 'success')
             return redirect(url_for('login'))
         
     return render_template('login.html', **forms)
@@ -252,7 +253,7 @@ def get_time_zones():
 
 #endregion --------
 
-# -------- User Routes --------
+#region --- User Admin Routes ---
 @app.route('/logout')
 @login_required
 def logout():
@@ -260,34 +261,6 @@ def logout():
     flash('Logout Successful.', 'info')
 
     return redirect(url_for('login'))
-
-@app.route('/update-theme', methods=['POST'])
-@login_required
-def update_theme():
-    data = request.get_json()
-    new_theme = data.get('theme')
-
-    if new_theme not in ['light', 'dark']:
-        return jsonify({'error': 'Invalid theme'}), 400
-    
-    user_theme = db.session.execute(select(UserTheme).where(UserTheme.user_id == current_user.id)).scalar_one_or_none()
-    if user_theme:
-        user_theme.theme = new_theme
-    else:
-        user_theme = UserTheme(user_id=current_user.id, theme=new_theme)
-        db.session.add(user_theme)
-
-    try:
-        db.session.commit()
-        return jsonify({'message': 'Theme updated successfully'}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/dashboard', methods=['GET', 'POST'])
-@login_required
-def dashboard():
-    return render_template('dashboard.html')
 
 @app.route('/user-profile', methods=['GET', 'POST'])
 @login_required
@@ -321,6 +294,29 @@ def user_profile():
         return redirect(url_for('dashboard'))
     
     return render_template('dashboard.html', user_profile_form=user_profile_form, show_user_profile_modal=True)
+
+@app.route('/update-theme', methods=['POST'])
+@login_required
+def update_theme():
+    data = request.get_json()
+    new_theme = data.get('theme')
+
+    if new_theme not in ['light', 'dark']:
+        return jsonify({'error': 'Invalid theme'}), 400
+    
+    user_theme = db.session.execute(select(UserTheme).where(UserTheme.user_id == current_user.id)).scalar_one_or_none()
+    if user_theme:
+        user_theme.theme = new_theme
+    else:
+        user_theme = UserTheme(user_id=current_user.id, theme=new_theme)
+        db.session.add(user_theme)
+
+    try:
+        db.session.commit()
+        return jsonify({'message': 'Theme updated successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/change-password', methods=['GET', 'POST'])
 @login_required
@@ -357,15 +353,82 @@ def change_password():
         return redirect(url_for('dashboard'))
 
     return render_template('change_password.html', change_password_form=change_password_form)
+#endregion
+
+#region --- Page Routes ---
+@app.route('/dashboard', methods=['GET', 'POST'])
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
 
 @app.route('/week-schedule', methods=['GET', 'POST'])
 @login_required
 def week_schedule():
+    add_event_form = AddEventForm()
+    seq = str(current_user.id)
+    database_events = db.session.execute(
+        select(CalendarEvent)
+        .options(selectinload(CalendarEvent.recurring_days))
+        .filter(CalendarEvent.user_id == current_user.id)
+    ).scalars().all()
+
+    events = database_to_calendarview(database_events)
 
     if request.method == 'POST':
-        pass
-    return render_template('week_schedule.html')
+        if add_event_form.validate_on_submit():
+            day = add_event_form.day.data if not add_event_form.day_of_week.data else None
+            start_time = time.fromisoformat(add_event_form.start.data)
+            end_time = time.fromisoformat(add_event_form.end.data)
 
+            conflict = db.session.execute(
+                select(CalendarEvent)
+                .join(CalendarEvent.recurring_days)
+                .filter(
+                    CalendarEvent.user_id == current_user.id,
+                    CalendarEventDay.day_of_week.in_(add_event_form.day_of_week.data),
+                    CalendarEvent.start < end_time,
+                    CalendarEvent.end > start_time
+                )
+            ).scalars().first()
+
+            if conflict:
+                flash(f"Conflict with: '{conflict.title}'", 'warning')
+                return redirect(url_for('week_schedule'))
+
+            new_event = CalendarEvent(
+                user_id = current_user.id,
+                title = add_event_form.title.data,
+                notes = add_event_form.notes.data,
+                day = day,
+                is_monthly = add_event_form.is_monthly.data,
+                is_annual = add_event_form.is_annual.data,
+                start = start_time,
+                end = end_time,
+                color = add_event_form.color.data
+            )
+
+            if add_event_form.day_of_week.data:
+                recurring_days = [
+                    CalendarEventDay(day_of_week = day, event = new_event)
+                    for day in add_event_form.day_of_week.data
+                ]
+                db.session.add_all(recurring_days)
+
+            try:
+                new_event.validate_exclusive_fields()
+                db.session.commit()
+                flash('Event added successfully!', 'success')
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                logging.error(f"Add event to database error: {e}")
+                flash('Something went wrong. Please contact support.', 'danger')
+                return redirect(url_for('week_schedule'))
+
+            return redirect(url_for('week_schedule'))
+    
+    render_week_schedule(f"static/images/calendar/{seq}week.png", events)
+    return render_template('week_schedule.html', add_event_form=add_event_form, seq=seq)
+#endregion
 
 if __name__ == '__main__':
     app.run(debug=True)

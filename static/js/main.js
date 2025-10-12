@@ -132,6 +132,67 @@ function injectCountryTimezone(formCountry, formTimeZone) {
     }
 }
 
+// --- Add Event Form Functions ---
+function addEventFormFunctions() {
+    const startSelect = document.getElementById('addEventFormStartField');
+    const endSelect = document.getElementById('addEventFormEndField');
+    const clearAllDays = document.getElementById('addEventFormClearAllDays');
+    const dayField = document.getElementById('addEventFormDayField');
+    const monthlyCheck = document.getElementById('addEventFormMonthlyCheck')
+    const annualCheck = document.getElementById('addEventFormAnnualCheck')
+    const daysOfWeekInput = document.querySelectorAll('input[name="day_of_week"]')
+    if (!startSelect || !endSelect || !clearAllDays || !dayField || !monthlyCheck || !annualCheck|| !daysOfWeekInput) { return }
+
+    clearAllDays.addEventListener('click', () => {
+        daysOfWeekInput.forEach(el => { el.disabled = false; el.checked = false; });
+        [dayField, monthlyCheck, annualCheck].forEach(el => el.disabled = false);
+    });
+
+    daysOfWeekInput.forEach(el => {
+        el.addEventListener('change', () => {
+            const anyChecked = Array.from(daysOfWeekInput).some(el => el.checked);
+            [dayField, monthlyCheck, annualCheck].forEach(el => el.disabled = anyChecked);
+        });
+    });
+
+    dayField.addEventListener('input', () => {
+        if (dayField.value) {
+            daysOfWeekInput.forEach(el => el.disabled = true);
+        } else {
+            daysOfWeekInput.forEach(el => el.disabled = false);
+        }
+    });
+
+    monthlyCheck.addEventListener('change', () => {
+        if (monthlyCheck.checked) {
+            annualCheck.checked = false;
+        }
+    });
+
+    annualCheck.addEventListener('change', () => {
+        if (annualCheck.checked) {
+            monthlyCheck.checked = false;
+        }
+    });
+
+    function filterEndOptions() {
+        const startValue = startSelect.value;
+        const startIndex = Array.from(endSelect.options).findIndex(opt => opt.value === startValue);
+
+        if (startIndex === -1) return;
+
+        Array.from(endSelect.options).forEach((opt, index) => {
+            opt.disabled = index <= startIndex;
+        });
+
+        if (endSelect.selectedIndex <= startIndex) {
+            endSelect.selectedIndex = startIndex + 1 < endSelect.options.length ? startIndex + 1 : 0;
+        }
+    }
+    startSelect.addEventListener('change', filterEndOptions);
+    filterEndOptions();
+}
+
 // Main?
 document.addEventListener("DOMContentLoaded", () => {
     autoDismissAlerts();
@@ -139,9 +200,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showModal('showUserProfileModal', 'userProfileModal');
     loginTheme();
     injectCountryTimezone('signup-form-country', 'signup-form-time-zone');
-    injectCountryTimezone('user-profile-form-country', 'user-profile-form-time-zone')
-    /* const signUpModal = document.getElementById('signUpModal');
-    if (signUpModal) {
-        signUpModal.addEventListener('shown.bs.modal', injectCountryTimezone);
-    } */
+    injectCountryTimezone('user-profile-form-country', 'user-profile-form-time-zone');
+    addEventFormFunctions()
 });
