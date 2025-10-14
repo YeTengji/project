@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+
+{% block title %}Week{% endblock %}
+
+{% block body %}
+
+<div class="container-fluid my-3">
+
+    <div class="row justify-content-center mx-5">
+
+        <div class="col-10">
+            <img src="{{ url_for('static', filename='images/calendar/' + seq + 'week.png') }}" class="img-fluid">
+        </div>
+
+        <div class="col-2 border">
+            <div class="d-grid gap-2">
+                <a href="javascript:void(0)" class="btn btn-primary my-1" data-bs-toggle="modal" data-bs-target="#addEventModal">Add Event</a>
+            </div>
+            <div class="list-group scrollarea border">
+            {% if dbe %}
+            {% for e in dbe %}
+                <a href="#" class="list-group-item list-group-item-action py-3 lh-sm" style="background-color: {{ e.color }};" data-bs-toggle="modal" data-bs-target="#editEventModal{{ e.id }}">
+                    <div class="d-flex w-100 align-items-center justify-content-between"> <strong class="mb-1">{{ e.title}}</strong> <small class="text-body-secondary">{{ e.start.strftime('%H:%M') }} - {{ e.end.strftime('%H:%M') }}</small> </div>
+                    <div>
+                        {% for r in e.recurring_days %}
+                        <small>{{ dow[r.day_of_week] }} {{ e.id }}</small>
+                        {% endfor %}
+                    </div>
+                    <div class="col-10 mb-1 small">{{ e.notes }}</div>
+                </a>
+            {% endfor %}
+            {% endif %}
+            </div>
+            
+        </div>
+
+    </div>
+
+
+
+</div>
+
+{% include 'components/_add_event_modal.html.jinja' %}
+{% include 'components/_edit_event_modal.html.jinja' %}
+
+{% endblock %}

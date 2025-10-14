@@ -14,6 +14,8 @@ from calendar_view.config.style import image_font
 from calendar_view.core import data
 from calendar_view.core.event import Event, EventStyle, EventStyles
 
+from PIL import ImageFont
+
 from extensions import mail
 
 #region --- Functions ---
@@ -89,13 +91,19 @@ def database_to_calendarview(data):
             )
     return events
 
+def image_font(size: int, font_path="static/fonts/LibreBaskerville-Regular.ttf"):
+    return ImageFont.truetype(font_path, size)
+
 def render_week_schedule(path, events):
     style.image_bg = (200, 200, 200, 128)
     style.hour_height = 60
+    style.title_font = image_font(80)
+    style.event_title_font = image_font(32)
+    style.day_of_week_font = image_font(32)
 
     config = data.CalendarConfig(
         lang='en',
-        title='My Schedule',
+        title=f"{current_user.first_name}'s Schedule",
         dates=get_user_week_range(current_user),
         hours='0 - 24',
         show_date=True,

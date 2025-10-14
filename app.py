@@ -14,7 +14,7 @@ from sqlalchemy.orm import selectinload
 
 from context import inject_theme_from_cookie, inject_user_profile_form
 from extensions import csrf, db, login_manager, mail
-from forms import AddEventForm, ChangePasswordForm, ForgotPasswordForm, LoginForm, ResetPasswordForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
+from forms import AddEventForm, ChangePasswordForm, EditEventForm, ForgotPasswordForm, LoginForm, ResetPasswordForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
 from helpers import database_to_calendarview, generate_secure_code, hex_to_rgba, send_reset_code_email, render_week_schedule
 from models import CalendarEvent, CalendarEventDay, PreviousPassword, ResetCode, User, UserTheme
 
@@ -366,17 +366,19 @@ def dashboard():
 def week_schedule():
     add_event_form = AddEventForm()
     seq = str(current_user.id)
+    dow = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    
     database_events = db.session.execute(
         select(CalendarEvent)
         .options(selectinload(CalendarEvent.recurring_days))
         .filter(CalendarEvent.user_id == current_user.id)
     ).scalars().all()
 
+    edit_event_form = {e.id: EditEventForm(obj=e) for e in database_events}
     events = database_to_calendarview(database_events)
 
     if request.method == 'POST':
         if add_event_form.validate_on_submit():
-            day = add_event_form.day.data if not add_event_form.day_of_week.data else None
             start_time = time.fromisoformat(add_event_form.start.data)
             end_time = time.fromisoformat(add_event_form.end.data)
 
@@ -399,9 +401,6 @@ def week_schedule():
                 user_id = current_user.id,
                 title = add_event_form.title.data,
                 notes = add_event_form.notes.data,
-                day = day,
-                is_monthly = add_event_form.is_monthly.data,
-                is_annual = add_event_form.is_annual.data,
                 start = start_time,
                 end = end_time,
                 color = add_event_form.color.data
@@ -415,7 +414,6 @@ def week_schedule():
                 db.session.add_all(recurring_days)
 
             try:
-                new_event.validate_exclusive_fields()
                 db.session.commit()
                 flash('Event added successfully!', 'success')
             except SQLAlchemyError as e:
@@ -427,7 +425,38 @@ def week_schedule():
             return redirect(url_for('week_schedule'))
     
     render_week_schedule(f"static/images/calendar/{seq}week.png", events)
-    return render_template('week_schedule.html', add_event_form=add_event_form, seq=seq)
+    return render_template('week_schedule.html.jinja', add_event_form=add_event_form, edit_event_form=edit_event_form, dbe=database_events, dow=dow,seq=seq)
+
+@app.route('/edit-event/<int:event_id>', methods=['POST'])
+@login_required
+def edit_event(event_id):
+    edit_event_form = EditEventForm()
+    if edit_event_form.validate_on_submit():
+        event = db.session.get(CalendarEvent, event_id)
+        if event and event.user_id == current_user.id:
+            event.title = edit_event_form.title.data
+            event.notes = edit_event_form.notes.data
+            event.color = edit_event_form.color.data
+            db.session.commit()
+            flash("Update sucessful!", "success")
+        else:
+            flash("Wut?!", "danger")
+    else:
+        flash("Form validation failed.", 'warning')
+    return redirect(url_for('week_schedule'))
+
+@app.route('/delete-event/<int:event_id>', methods=['POST'])
+@login_required
+def delete_event(event_id):
+    event = db.session.get(CalendarEvent, event_id)
+    if event and event.user_id == current_user.id:
+        db.session.delete(event)
+        db.session.commit()
+        flash("Event deleted sucessfully!", 'success')
+    else:
+        flash("Unauthorized", 'danger')
+    return redirect(url_for('week_schedule'))
+
 #endregion
 
 if __name__ == '__main__':

@@ -29,8 +29,8 @@
                             {% macro nav_item(endpoint, label) %}
                             <li class="nav-item"> <a class="nav-link {% if request.endpoint == endpoint %}active{% endif %}" href="{{ url_for(endpoint) }}">{{ label }}</a> </li>
                             {% endmacro %}
-                            {{ nav_item('dashboard', 'Dashboard') }}
-                            {{ nav_item('week_schedule', 'Week') }}
+                            {{ nav_item('dashboard', 'Dashboard') | safe}}
+                            {{ nav_item('week_schedule', 'Week') | safe }}
                             <!--li class="nav-item"> <a class="nav-link" href="{{ url_for('week_schedule') }}">Week</a> </li>
                             <li class="nav-item"> <a class="nav-link" href="#">Upkeep</a> </li-->
                         </ul>

@@ -72,21 +72,12 @@ class CalendarEvent(db.Model):
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
     title: Mapped[str] = mapped_column(String(24), nullable=False)
     notes: Mapped[str] = mapped_column(String(64), nullable=True)
-    day: Mapped[date] = mapped_column(Date(), nullable=True)
-    is_monthly: Mapped[bool] = mapped_column(Boolean, default=False)
-    is_annual: Mapped[bool] = mapped_column(Boolean, default=False)
     start: Mapped[time] = mapped_column(Time(), nullable=False)
     end: Mapped[time] = mapped_column(Time(), nullable=False)
     color: Mapped[str] = mapped_column(String(7), nullable=False)
 
     user = relationship('User', back_populates='calendar_events')
     recurring_days = relationship('CalendarEventDay', back_populates='event', cascade='all, delete-orphan')
-
-    def validate_exclusive_fields(self):
-        if self.day is None and not self.recurring_days:
-            raise ValueError("Must set either 'day' or at least one recurring weekday.")
-        if self.day is not None and self.recurring_days:
-            raise ValueError("Cannot set both 'day' and recurring weekdays.")
 
 class CalendarEventDay(db.Model):
     __tablename__ = 'calendar_event_days'
@@ -101,16 +92,26 @@ class CalendarEventDay(db.Model):
 
     event = relationship('CalendarEvent', back_populates='recurring_days')
 
-class SharedCalendarImage(db.Model):
-    __tablename__ = 'shared_calendar_images'
+class CalendarImage(db.Model):
+    __tablename__ = 'calendar_images'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
-    viewer_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
-    image_path: Mapped[str] = mapped_column(String(256), nullable=False)
+    secure_token: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
     creation_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    owner = relationship('User', foreign_keys=[owner_id], backref='shared_images')
-    viewer = relationship('User', foreign_keys=[viewer_id], backref='received_images')
+    owner = relationship('User', backref='calendar_images')
+    viewers = relationship('CalendarShare', back_populates='image')
+
+class CalendarShare(db.Model):
+    __tablename__ = 'calendar_shares'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    image_id: Mapped[int] = mapped_column(ForeignKey('calendar_images.id'), nullable=False)
+    viewer_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
+
+    image = relationship('CalendarImage', back_populates='viewers')
+    viewer = relationship('User', backref='received_calendar_images')
+
 
 

@@ -122,9 +122,6 @@ class AddEventForm(FlaskForm):
     form_type = HiddenField('Form Type', default='add-event')
     title = StringField('Title', validators=[DataRequired(), Length (min=1, max=24)])
     notes = StringField('Notes', validators=[DataRequired(), Length(min=1, max=64)])
-    day = DateField('Date', default=date.today, validators=[Optional()])
-    is_monthly = BooleanField('Monthly')
-    is_annual = BooleanField('Annual')
     day_of_week = SelectMultipleField(
         'Day(s) of the Week',
         choices=[
@@ -148,7 +145,11 @@ class AddEventForm(FlaskForm):
 
     def validate(self, extra_validators=None):
         is_valid = super().validate(extra_validators)
-        if is_valid and self.day_of_week.data:
-            self.day.data=None
         return is_valid
 
+class EditEventForm(FlaskForm):
+    form_type = HiddenField('Form Type', default='edit-event')
+    title = StringField('Title', validators=[DataRequired(), Length (min=1, max=24)])
+    notes = StringField('Notes', validators=[DataRequired(), Length(min=1, max=64)])
+    color = StringField('Color', default='#0F52BA', render_kw={'type': 'color'}, validators=[DataRequired(), Length(max=7)])
+    submit = SubmitField("Update")

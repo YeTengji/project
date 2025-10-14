@@ -137,42 +137,11 @@ function addEventFormFunctions() {
     const startSelect = document.getElementById('addEventFormStartField');
     const endSelect = document.getElementById('addEventFormEndField');
     const clearAllDays = document.getElementById('addEventFormClearAllDays');
-    const dayField = document.getElementById('addEventFormDayField');
-    const monthlyCheck = document.getElementById('addEventFormMonthlyCheck')
-    const annualCheck = document.getElementById('addEventFormAnnualCheck')
     const daysOfWeekInput = document.querySelectorAll('input[name="day_of_week"]')
-    if (!startSelect || !endSelect || !clearAllDays || !dayField || !monthlyCheck || !annualCheck|| !daysOfWeekInput) { return }
+    if (!startSelect || !endSelect || !clearAllDays || !daysOfWeekInput) { return }
 
     clearAllDays.addEventListener('click', () => {
         daysOfWeekInput.forEach(el => { el.disabled = false; el.checked = false; });
-        [dayField, monthlyCheck, annualCheck].forEach(el => el.disabled = false);
-    });
-
-    daysOfWeekInput.forEach(el => {
-        el.addEventListener('change', () => {
-            const anyChecked = Array.from(daysOfWeekInput).some(el => el.checked);
-            [dayField, monthlyCheck, annualCheck].forEach(el => el.disabled = anyChecked);
-        });
-    });
-
-    dayField.addEventListener('input', () => {
-        if (dayField.value) {
-            daysOfWeekInput.forEach(el => el.disabled = true);
-        } else {
-            daysOfWeekInput.forEach(el => el.disabled = false);
-        }
-    });
-
-    monthlyCheck.addEventListener('change', () => {
-        if (monthlyCheck.checked) {
-            annualCheck.checked = false;
-        }
-    });
-
-    annualCheck.addEventListener('change', () => {
-        if (annualCheck.checked) {
-            monthlyCheck.checked = false;
-        }
     });
 
     function filterEndOptions() {

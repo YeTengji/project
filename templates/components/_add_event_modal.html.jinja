@@ -41,19 +41,6 @@
                         {% endfor %}
                     </div>
 
-                    <div class="col-md-5">
-                        {{ add_event_form.day.label(class="form-label") }}
-                        {{ add_event_form.day(class="form-control", id="addEventFormDayField") }}
-                        {% for error in add_event_form.day.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                    <div class="d-flex justify-content-center gap-3 col-md-5">
-                        {{ add_event_form.is_monthly.label(class="form-check-label") }}
-                        {{ add_event_form.is_monthly(class="form-check-input", id="addEventFormMonthlyCheck") }}
-                        {{ add_event_form.is_annual.label(class="form-check-label") }}
-                        {{ add_event_form.is_annual(class="form-check-input", id="addEventFormAnnualCheck") }}
-                    </div>
                     <div class="col-md-2">
                         <button type="button" class="btn btn-sm btn-outline-secondary mb-2" id="addEventFormClearAllDays">Clear All</button>
                     </div>
