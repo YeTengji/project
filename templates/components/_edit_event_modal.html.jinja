@@ -1,7 +1,7 @@
 {% for e in dbe %}
 <div class="modal fade" id="editEventModal{{ e.id }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
     aria-labelledby="editEventModalLabel{{ e.id }}" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content p-5">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="editEventModalLabel{{ e.id }}">Edit Event</h1>
@@ -28,13 +28,15 @@
 
                     <hr>
 
-                    <div class="d-flex justify-content-between">
-                        <div class="col-3 d-flex justify-content-between">
-                            {{ edit_event_form[e.id].submit(class="btn btn-primary") }}
-                            <button type="button" class="btn btn-primary" data-bs-target="#deleteEventModal{{ e.id }}" data-bs-toggle="modal">Delete</button>
-                        </div>
+                    <div class="d-flex">
                         <div class="col-6">
-                            {{ edit_event_form[e.id].color(class="event-color-select") }}
+                            {{ edit_event_form[e.id].color(class="event-color-select w-100") }}
+                        </div>
+                        <div class="d-flex justify-content-end col-3">
+                            {{ edit_event_form[e.id].submit(class="btn btn-primary") }}
+                        </div>
+                        <div class="d-flex justify-content-end col-3">
+                            <button type="button" class="btn btn-primary" data-bs-target="#deleteEventModal{{ e.id }}" data-bs-toggle="modal">Delete</button>
                         </div>
                     </div>
                 </form>
@@ -51,10 +53,10 @@
 
 <div class="modal fade" id="deleteEventModal{{ e.id }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
     aria-labelledby="deleteEventModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="deleteEventModalLabel">Delete: {{ e.title }} </h1>
+                <h1 class="modal-title fs-5" id="deleteEventModalLabel"><strong>{{ e.title }}</strong></h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">

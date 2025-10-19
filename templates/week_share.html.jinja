@@ -1,0 +1,130 @@
+{% extends "layout.html.jinja" %}
+
+{% block title %}Week Share{% endblock %}
+
+{% block body %}
+
+<div class="container-fluid my-3">
+
+    <div class="row justify-content-center mx-5">
+
+        <div class="col-10">
+        {% if accepted_requests %}
+            <div id="carouselSharedImages" class="carousel slide">
+                <div class="carousel-inner">
+                {% for request in accepted_requests %}
+                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                        <img src="{{ url_for('static', filename='images/calendar/' + request.image.secure_token + '.png') }}" class="img-fluid" alt="...">
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <img src="/static/images/calendarPH.PNG" class="img-fluid">
+        {% endif %}
+        </div>
+
+        <div class="col-2">
+            <div class="mb-3">
+                <a href="{{ url_for('week_schedule') }}" type="button" class="btn btn-outline-primary w-100" type="button">
+                    My Week
+                </a>
+            </div>
+
+            <div class="mb-3">
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-center">
+                        <h5>Received Calendars</h5>
+                    </li>
+                    {% if accepted_requests %}
+                        {% for request in accepted_requests %}
+                        <li class="list-group-item d-flex flex-column justify-content-between">
+                            <div class="d-flex justify-content-between">
+                                <a href="javascript:void(0)" class="btn w-75 carousel-sync-btn {% if loop.first %}active{% endif %}"
+                                    data-bs-target="#carouselSharedImages" data-bs-slide-to="{{ loop.index0 }}" data-slide-index="{{ loop.index0 }}">
+                                    {{ request.image.owner.username }}
+                                </a>
+                                <button type="button" class="btn btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteAcceptedCalendarShareModal"
+                                        data-owner="{{ request.image.owner.username }}"
+                                        data-request-id="{{ request.id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <div>
+                                <small class="d-flex justify-content-center w-75">Last update: {{ request.image.last_update }}</small>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="list-group-item">
+                            <p>No shares accepted yet</p>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div>
+                <ul class="list-group">
+                {% if pending_requests %}
+                    {% for request in pending_requests %}
+                    <li class="list-group-item">
+                        Share request from <strong>{{ request.image.owner.username}}</strong>
+                        <form class="my-1" method="POST" action="{{ url_for('share_response', request_id=request.id) }}">
+                            {{ share_calendar_response_form[request.id].hidden_tag() }}
+                            {{ share_calendar_response_form[request.id].request_id(value=request.id)}}
+                            {{ share_calendar_response_form[request.id].submit_accept(class="btn btn-primary btn-sm") }}
+                            {{ share_calendar_response_form[request.id].submit_decline(class="btn btn-primary btn-sm") }}                        
+                        </form>
+                    </li>
+                    {% endfor %}
+                {% else %}
+                        <hr>
+                {% endif %}
+                </ul>
+            </div>
+
+            <div class="mt-3">
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-center">
+                        <h5>My Share Requests</h5>
+                    </li>
+                    {% if sent_requests %}
+                        {% for request in sent_requests %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <a href="javascript:void(0)" class="btn">
+                                {{ request.viewer.username }}:
+                                {% if request.status == CalendarShareStatus.ACCEPTED %}
+                                    <small class="text-success">Accepted</small>
+                                {% elif request.status == CalendarShareStatus.PENDING %}
+                                    <small class="text-warning">Waiting</small>
+                                {% elif request.status == CalendarShareStatus.DECLINED %}
+                                    <small class="text-danger"> Declined</small>
+                                {% endif %}
+                            </a>
+                            <button type="button" class="btn btn-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteCalendarShareRequestModal"
+                                    data-username="{{ request.viewer.username }}"
+                                    data-request-id="{{ request.id }}"
+                                    data-request-status="{{ request.status }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                    <li class="list-group-item">
+                        <p>No requests sent yet.</p>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% include 'components/_delete_calendar_share_modals.html.jinja' %}
+
+{% endblock %}

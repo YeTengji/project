@@ -4,7 +4,7 @@ import pycountry
 from datetime import date
 
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, DateField, DateTimeField, HiddenField, PasswordField, SelectField, SelectMultipleField, StringField, SubmitField
+from wtforms import BooleanField, DateField, DateTimeField, HiddenField, PasswordField, SelectField, SelectMultipleField, StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, Regexp, ValidationError
 from wtforms.widgets import CheckboxInput, ListWidget
 from flask_login import current_user
@@ -121,7 +121,7 @@ class ChangePasswordForm(ResetPasswordForm):
 class AddEventForm(FlaskForm):
     form_type = HiddenField('Form Type', default='add-event')
     title = StringField('Title', validators=[DataRequired(), Length (min=1, max=24)])
-    notes = StringField('Notes', validators=[DataRequired(), Length(min=1, max=64)])
+    notes = TextAreaField('Notes', render_kw={"rows":2, "maxlength":64}, validators=[Optional(), Length(max=64)])
     day_of_week = SelectMultipleField(
         'Day(s) of the Week',
         choices=[
@@ -134,7 +134,6 @@ class AddEventForm(FlaskForm):
             ('6', 'Sunday'),
         ],
         coerce=int,
-        validators=[Optional()],
         option_widget=CheckboxInput(),
         widget=ListWidget(prefix_label=False)
     )
@@ -146,10 +145,26 @@ class AddEventForm(FlaskForm):
     def validate(self, extra_validators=None):
         is_valid = super().validate(extra_validators)
         return is_valid
+    
+    def validate_day_of_week(self, field):
+        if not field.data or len(field.data) == 0:
+            raise ValidationError('Please select at least one day.')
 
 class EditEventForm(FlaskForm):
     form_type = HiddenField('Form Type', default='edit-event')
     title = StringField('Title', validators=[DataRequired(), Length (min=1, max=24)])
-    notes = StringField('Notes', validators=[DataRequired(), Length(min=1, max=64)])
+    notes = TextAreaField('Notes', render_kw={"rows":2, "maxlength":64}, validators=[Optional(), Length(max=64)])
     color = StringField('Color', default='#0F52BA', render_kw={'type': 'color'}, validators=[DataRequired(), Length(max=7)])
     submit = SubmitField("Update")
+
+class ShareCalendarRequestForm(FlaskForm):
+    form_type = HiddenField('Form Type', default='share-calendar-request')
+    image_id= HiddenField('Image ID')
+    identifier = StringField('Username or Email', validators=[DataRequired()])
+    submit = SubmitField('Send Request')
+
+class ShareCalendarResponseForm(FlaskForm):
+    form_type = HiddenField('Form Type', default='share-calendar-response')
+    request_id = HiddenField(validators=[DataRequired()])
+    submit_accept = SubmitField('Accept')
+    submit_decline = SubmitField('Decline')

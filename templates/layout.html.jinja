@@ -36,7 +36,7 @@
                         </ul>
                         <div class="d-lg-flex col-lg-3 justify-content-lg-end gap-2">
                             <div class="dropdown">
-                                <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button class="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     {{ current_user.first_name + " " + current_user.last_name}}
                                 </button>
                                 <ul class="dropdown-menu">
@@ -86,12 +86,13 @@
 
 <!-- Sign Up Errors -->
 {% if signup_form is defined and signup_form.errors %}
-<script>
+    <input type="hidden" id="signUpModalTrigger" value="true">
+<!-- script>
     document.addEventListener('DOMContentLoaded', () => {
         const signUpModal = new bootstrap.Modal(document.getElementById('signUpModal'));
         signUpModal.show();
     });
-</script>
+</script -->
 {% endif %}
 
 </body>

@@ -47,10 +47,10 @@
                                 style="cursor:pointer;">
                                 <i class="bi bi-eye" id="toggle-signup-form-password"></i>
                             </span>
+                        </div>
                         {% for error in signup_form.password.errors %}
                         <div class="text-danger">{{ error }}</div>
                         {% endfor %}
-                        </div>
                     </div>
                     <div class="col-md-6">
                         {{ signup_form.confirm_password.label(class="form-label") }}
@@ -61,10 +61,10 @@
                                 style="cursor:pointer;">
                                 <i class="bi bi-eye" id="toggle-signup-form-confirm-password"></i>
                             </span>
+                        </div>
                         {% for error in signup_form.confirm_password.errors %}
                         <div class="text-danger">{{ error }}</div>
                         {% endfor %}
-                        </div>
                     </div>
                     <div class="col-md-6">
                         {{ signup_form.country.label(class="form-label") }}

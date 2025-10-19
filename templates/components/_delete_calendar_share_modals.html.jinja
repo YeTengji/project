@@ -1,0 +1,48 @@
+<!-- Button trigger modal 
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#deleteCalendarShareRequest">
+    Launch static backdrop modal
+</button> -->
+
+<!-- Modal -->
+<div class="modal fade" id="deleteCalendarShareRequestModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="deleteCalendarShareRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="deleteCalendarShareRequestModalLabel">Delete Share Request</h1>
+            </div>
+            <div class="modal-body">
+                <span id="deleteCalendarShareRequestModalMessage"></span>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" id="deleteCalendarShareRequestModalForm" data-base-url="{{ url_for('delete_calendar_share_request', request_id=0) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteAcceptedCalendarShareModal" data-bs-backdrop="static" data-bs-keyboard="false"
+    tabindex="-1" aria-labelledby="deleteAcceptedCalendarShareModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="deleteAcceptedCalendarShareModalLabel">Delete Share Request</h1>
+            </div>
+            <div class="modal-body">
+                <span id="deleteAcceptedCalendarShareModalMessage"></span>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" id="deleteAcceptedCalendarShareModalForm"
+                    data-base-url="{{ url_for('delete_accepted_calendar_share', request_id=0) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

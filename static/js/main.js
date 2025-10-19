@@ -77,6 +77,16 @@ function showModal(triggerID, modalID) {
     }
 }
 
+// Offcanvas Control
+function showOffcanvas(triggerID, offcanvasID){
+    const showOffcanvas = document.getElementById(triggerID);
+    if (showOffcanvas && showOffcanvas.value === 'true') {
+        const offcanvasElement = document.getElementById(offcanvasID);
+        const offcanvas = new bootstrap.Offcanvas(offcanvasElement);
+        offcanvas.show()
+    }
+}
+
 // Toggle Password Visibility
 function togglePasswordVisibility(inputId, iconId) {
     const input = document.getElementById(inputId);
@@ -162,13 +172,127 @@ function addEventFormFunctions() {
     filterEndOptions();
 }
 
+// --- Share Calendar Carousel ---
+function shareCalendarCarousel() {
+    const carouselElement = document.querySelector('#carouselSharedImages');
+    if (carouselElement) {
+        const carousel = new bootstrap.Carousel(carouselElement, {
+            interval: 2000,
+            pause: 'hover',
+            wrap: true
+        });
+
+        carouselElement.addEventListener('slid.bs.carousel', (event) => {
+            const activeIndex = event.to;
+            const buttons = document.querySelectorAll('.carousel-sync-btn');
+
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.slideIndex) === activeIndex) {
+                    btn.classList.add('active');
+                }
+            });
+        });
+    }
+}
+
+// --- Form Field Focus ---
+function formFieldFocus({ triggerID = null, fieldID, triggerType = 'modal'}) {
+    const field = document.getElementById(fieldID)
+    if (!field) return;
+
+    const eventMap = {
+        modal: 'shown.bs.modal',
+        offcanvas: 'shown.bs.offcanvas'
+    };
+
+    const eventName = eventMap[triggerType];
+
+    if (triggerID && eventName) {
+        const trigger = document.getElementById(triggerID);
+        trigger?.addEventListener(eventName, () => {
+            field.focus();
+        });
+    } else {
+        field.focus();
+    }
+}
+
+// Delete Calendar Shares Modals
+function deleteCalendarShareRequest() {
+    const modal = document.getElementById('deleteCalendarShareRequestModal');
+    if (!modal) return;
+    modal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const username = button.getAttribute('data-username');
+        const requestID = button.getAttribute('data-request-id');
+        const requestStatus = button.getAttribute('data-request-status')
+        const form = modal.querySelector('#deleteCalendarShareRequestModalForm')
+        const baseURL = form.getAttribute('data-base-url').replace(/0$/, requestID);
+
+        form.action = baseURL;
+
+        let message = '';
+        switch (requestStatus) {
+            case '0':
+                message = `Remove request sent to ${username}?`;
+                break;
+            case '1':
+                message = `Cancel request sent to ${username}?`;
+                break;
+            case '2':
+                message = `Stop sharing calendar with ${username}?`;
+                break;
+        }
+
+        modal.querySelector('#deleteCalendarShareRequestModalMessage').textContent = message;
+
+    });
+}
+
+function deleteAcceptedCalendarShare() {
+    const modal = document.getElementById('deleteAcceptedCalendarShareModal')
+    const form = document.getElementById('deleteAcceptedCalendarShareModalForm')
+    const message = document.getElementById('deleteAcceptedCalendarShareModalMessage')
+    if (!modal) return;
+
+    modal.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget;
+        const owner = button.getAttribute('data-owner');
+        const requestID = button.getAttribute('data-request-id');
+        const baseURL = form.getAttribute('data-base-url');
+
+        form.action =baseURL.replace(/0$/, requestID);
+        message.textContent = `Stop viewing ${owner}'s schedule?`;
+    });
+}
+
 // Main?
 document.addEventListener("DOMContentLoaded", () => {
+    formFieldFocus({
+        triggerID: 'shareCalendarRequestModal',
+        fieldID: 'share_calendar_request_form_identifier_field',
+        triggerType: 'modal'
+    });
+    formFieldFocus({ fieldID: 'change-password-form-current-password' });
+    formFieldFocus({ fieldID: 'forgotPasswordFormField'});
+    formFieldFocus({ fieldID: 'verifyPasswordResetCodeFormField'});
+    formFieldFocus({ fieldID: 'reset-password-form-password' });
+    formFieldFocus({
+        triggerID: 'addEventOffcanvas',
+        fieldID: 'addEventFormTitleField',
+        triggerType: 'offcanvas'
+    });
     autoDismissAlerts();
     themeSwitcher();
     showModal('showUserProfileModal', 'userProfileModal');
+    showModal('signUpModalTrigger', 'signUpModal');
+    showOffcanvas('addEventTrigger', 'addEventOffcanvas')
     loginTheme();
     injectCountryTimezone('signup-form-country', 'signup-form-time-zone');
     injectCountryTimezone('user-profile-form-country', 'user-profile-form-time-zone');
-    addEventFormFunctions()
+    addEventFormFunctions();
+    shareCalendarCarousel();
+    deleteCalendarShareRequest();
+    deleteAcceptedCalendarShare();
 });

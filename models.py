@@ -1,8 +1,11 @@
+import enum
+
 from datetime import date, datetime, time, timezone
 from typing import List
 from werkzeug.security import check_password_hash
 from flask_login import UserMixin
 from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, String, Time, UniqueConstraint
+from sqlalchemy import Enum as SQLAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from extensions import db
@@ -98,10 +101,22 @@ class CalendarImage(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
     secure_token: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
-    creation_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    last_update: Mapped[date] = mapped_column(Date, nullable=False, default=date.today)
 
     owner = relationship('User', backref='calendar_images')
     viewers = relationship('CalendarShare', back_populates='image')
+
+class CalendarShareStatus(enum.IntEnum):
+    DECLINED = 0
+    PENDING = 1
+    ACCEPTED = 2
+
+    def label(self):
+        return {
+            self.DECLINED: 'Declined',
+            self.PENDING: 'Waiting',
+            self.ACCEPTED: 'Accepted'
+        }[self]
 
 class CalendarShare(db.Model):
     __tablename__ = 'calendar_shares'
@@ -109,9 +124,7 @@ class CalendarShare(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     image_id: Mapped[int] = mapped_column(ForeignKey('calendar_images.id'), nullable=False)
     viewer_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
+    status: Mapped[CalendarShareStatus] = mapped_column(Integer, default=CalendarShareStatus.PENDING)
 
     image = relationship('CalendarImage', back_populates='viewers')
     viewer = relationship('User', backref='received_calendar_images')
-
-
-

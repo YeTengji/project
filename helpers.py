@@ -1,12 +1,14 @@
 
 import secrets
 import string
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 from flask import current_app
 from flask_login import current_user
 from flask_mail import Message
+
+from sqlalchemy import select
 
 from calendar_view.calendar import Calendar
 from calendar_view.config import style
@@ -16,7 +18,8 @@ from calendar_view.core.event import Event, EventStyle, EventStyles
 
 from PIL import ImageFont
 
-from extensions import mail
+from extensions import db, mail
+from models import CalendarImage
 
 #region --- Functions ---
 # --- Generate Six Character Code ---
@@ -91,10 +94,35 @@ def database_to_calendarview(data):
             )
     return events
 
+def generate_unique_token():
+    while True:
+        token = secrets.token_urlsafe(48)[:64]
+        exists = db.session.execute(
+            select(CalendarImage)
+            .filter_by(secure_token=token)
+        ).scalar_one_or_none()
+        if not exists:
+            return token
+
+def get_or_create_calendar_image(user_id):
+    image = db.session.execute(
+        select(CalendarImage)
+        .filter(CalendarImage.owner_id == user_id)
+    ).scalar_one_or_none()
+    if image:
+        return image
+    token = generate_unique_token()
+    image = CalendarImage(owner_id=user_id, secure_token=token, last_update=date.today())
+    db.session.add(image)
+    db.session.commit()
+    return image
+
 def image_font(size: int, font_path="static/fonts/LibreBaskerville-Regular.ttf"):
     return ImageFont.truetype(font_path, size)
 
-def render_week_schedule(path, events):
+def render_week_schedule(user, events):
+    image = get_or_create_calendar_image(user.id)
+    path = f"static/images/calendar/{image.secure_token}.png"
     style.image_bg = (200, 200, 200, 128)
     style.hour_height = 60
     style.title_font = image_font(80)
@@ -103,7 +131,7 @@ def render_week_schedule(path, events):
 
     config = data.CalendarConfig(
         lang='en',
-        title=f"{current_user.first_name}'s Schedule",
+        title=f"{current_user.username}'s Schedule",
         dates=get_user_week_range(current_user),
         hours='0 - 24',
         show_date=True,

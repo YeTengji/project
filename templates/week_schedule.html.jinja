@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "layout.html.jinja" %}
 
 {% block title %}Week{% endblock %}
 
@@ -9,38 +9,53 @@
     <div class="row justify-content-center mx-5">
 
         <div class="col-10">
-            <img src="{{ url_for('static', filename='images/calendar/' + seq + 'week.png') }}" class="img-fluid">
+            <img src="{{ url_for('static', filename='images/calendar/' + image + '.png') }}" class="img-fluid" alt="Owner's Calendar">
         </div>
 
-        <div class="col-2 border">
-            <div class="d-grid gap-2">
-                <a href="javascript:void(0)" class="btn btn-primary my-1" data-bs-toggle="modal" data-bs-target="#addEventModal">Add Event</a>
+        <div class="col-2">
+            <div class="dropdown mb-3">
+                <a href="{{ url_for('week_share') }}" type="button" class="btn btn-outline-primary w-100" type="button">
+                    Collaborate
+                </a>
             </div>
-            <div class="list-group scrollarea border">
-            {% if dbe %}
-            {% for e in dbe %}
+            <div class="mb-3 w-100">
+                <a href="javascript:void(0)" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#shareCalendarRequestModal">
+                    Share My Calendar
+                </a>
+            </div>
+            <div class="list-group scrollarea">
+                <div class="mb-2 w-100">
+                    <a href="javascript:void(0)" class="btn btn-outline-primary w-100" data-bs-toggle="offcanvas" data-bs-target="#addEventOffcanvas">
+                        Add New Schedule
+                    </a>
+                </div>
+                {% if dbe %}
+                {% for e in dbe %}
                 <a href="#" class="list-group-item list-group-item-action py-3 lh-sm" style="background-color: {{ e.color }};" data-bs-toggle="modal" data-bs-target="#editEventModal{{ e.id }}">
                     <div class="d-flex w-100 align-items-center justify-content-between"> <strong class="mb-1">{{ e.title}}</strong> <small class="text-body-secondary">{{ e.start.strftime('%H:%M') }} - {{ e.end.strftime('%H:%M') }}</small> </div>
                     <div>
                         {% for r in e.recurring_days %}
-                        <small>{{ dow[r.day_of_week] }} {{ e.id }}</small>
+                        <small class="me-1">{{ dow[r.day_of_week] }}</small>
                         {% endfor %}
                     </div>
                     <div class="col-10 mb-1 small">{{ e.notes }}</div>
                 </a>
-            {% endfor %}
-            {% endif %}
+                {% endfor %}
+                {% endif %}
             </div>
             
         </div>
 
     </div>
 
-
-
 </div>
 
-{% include 'components/_add_event_modal.html.jinja' %}
+{% include 'components/_add_event_offcanvas.html.jinja' %}
 {% include 'components/_edit_event_modal.html.jinja' %}
+{% include 'components/_share_calendar_request_modal.html.jinja' %}
+
+{% if add_event_form.errors %}
+    <input type="hidden" id="addEventTrigger" value="true">
+{% endif %}
 
 {% endblock %}

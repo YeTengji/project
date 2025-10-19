@@ -1,0 +1,38 @@
+<div class="modal fade" id="shareCalendarRequestModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="shareCalendarRequestLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content p-5">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="shareCalendarRequestLabel">Who do you want to share your calendar with?</h1>
+            </div>
+            <div class="modal-body">
+
+                <form class="row g-3" method="POST" action="{{ url_for('share_calendar_request') }}">
+                    {{ share_calendar_request_form.hidden_tag() }}
+
+                    <div class="col-md-12">
+                        {{ share_calendar_request_form.identifier.label(class="form-label") }}
+                        {{ share_calendar_request_form.identifier(id="share_calendar_request_form_identifier_field", class="form-control") }}
+                        {% for error in share_calendar_request_form.identifier.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex">
+                        <div>
+                            {{ share_calendar_request_form.submit(class="btn btn-primary") }}
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+            <div class="modal-footer">
+                <form method="GET" action="{{ url_for('week_schedule') }}">
+                    <button type="submit" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

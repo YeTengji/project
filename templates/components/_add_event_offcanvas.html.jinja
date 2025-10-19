@@ -1,0 +1,80 @@
+<div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1" id="addEventOffcanvas" aria-labelledby="addEventOffcanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="addEventOffcanvasLabel">Add New Timeframe</h5>
+  </div>
+  <div class="offcanvas-body">
+    <div>
+        <form class="row g-3" method="POST" action="{{ url_for('week_schedule') }}">
+            {{ add_event_form.hidden_tag() }}
+        
+            <div class="col-md-12">
+                {{ add_event_form.title.label(class="form-label") }}
+                {{ add_event_form.title(id="addEventFormTitleField", class="form-control") }}
+                {% for error in add_event_form.title.errors %}
+                <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="col-md-12">
+                {{ add_event_form.notes.label(class="form-label") }}
+                {{ add_event_form.notes(class="form-control") }}
+                {% for error in add_event_form.notes.errors %}
+                <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <hr>
+            <!-- Day(s) of the Week -->
+            <div class="col-md-12">
+                {{ add_event_form.day_of_week.label(class="form-label") }}
+                <div class="d-flex flex-wrap gap-3">
+                    {% for subfield in add_event_form.day_of_week %}
+                    <div class="form-check">
+                        {{ subfield(class="form-check-input") }}
+                        {{ subfield.label(class="form-check-label") }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% for error in add_event_form.day_of_week.errors %}
+                <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+        
+            <div class="col-md-12">
+                <button type="button" class="btn btn-sm btn-outline-secondary mb-2 w-100" id="addEventFormClearAllDays">Clear
+                    All</button>
+            </div>
+        
+            <hr>
+        
+            <div class="col-md-6">
+                {{ add_event_form.start.label(class="form-label") }}
+                {{ add_event_form.start(class="form-select", id="addEventFormStartField") }}
+                {% for error in add_event_form.start.errors %}
+                <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="col-md-6">
+                {{ add_event_form.end.label(class="form-label") }}
+                {{ add_event_form.end(class="form-select", id="addEventFormEndField") }}
+                {% for error in add_event_form.end.errors %}
+                <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+        
+            <hr>
+        
+            <div class="col-md-12">
+                {{ add_event_form.color(class="event-color-select w-100") }}
+            </div>
+            <div class="col-md-12 mt-5">
+                {{ add_event_form.submit(class="btn btn-primary w-100") }}
+            </div>
+        </form>
+        <div class="my-3">
+            <form method="GET" action="{{ url_for('week_schedule') }}">
+                <button type="submit" class="btn btn-secondary w-100" data-bs-dismiss="modal">Cancel</button>
+            </form>
+        </div>
+
+    </div>
+  </div>
+</div>

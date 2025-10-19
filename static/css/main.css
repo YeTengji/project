@@ -32,10 +32,3 @@ body {
 .login-group {
     height: calc(100vh - 72px);
 }
-
-.event-color-select {
-    height: 32px;
-    width: 327px;
-    margin-left: 8px;
-    cursor: pointer;
-}

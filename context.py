@@ -1,7 +1,7 @@
 from flask import request
 from flask_login import current_user
 
-from models import db, User
+from models import db, CalendarShareStatus, User
 from forms import UserProfileForm
 
 def inject_theme_from_cookie():
@@ -13,4 +13,7 @@ def inject_user_profile_form():
         user = db.session.get(User, current_user.id)
         return dict(user_profile_form=UserProfileForm(obj=user))
     return dict(user_profile_form=None)
+
+def inject_calendar_share_status_enums():
+    return dict(CalendarShareStatus=CalendarShareStatus)
 

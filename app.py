@@ -10,13 +10,13 @@ from flask_login import login_required, login_user, logout_user, current_user
 
 from sqlalchemy import select, or_, func
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 
-from context import inject_theme_from_cookie, inject_user_profile_form
+from context import inject_calendar_share_status_enums, inject_theme_from_cookie, inject_user_profile_form
 from extensions import csrf, db, login_manager, mail
-from forms import AddEventForm, ChangePasswordForm, EditEventForm, ForgotPasswordForm, LoginForm, ResetPasswordForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
-from helpers import database_to_calendarview, generate_secure_code, hex_to_rgba, send_reset_code_email, render_week_schedule
-from models import CalendarEvent, CalendarEventDay, PreviousPassword, ResetCode, User, UserTheme
+from forms import AddEventForm, ChangePasswordForm, EditEventForm, ForgotPasswordForm, LoginForm, ResetPasswordForm, ShareCalendarRequestForm, ShareCalendarResponseForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
+from helpers import database_to_calendarview, generate_secure_code, get_or_create_calendar_image, send_reset_code_email, render_week_schedule
+from models import CalendarEvent, CalendarEventDay, CalendarImage, CalendarShare, CalendarShareStatus, PreviousPassword, ResetCode, User, UserTheme
 
 load_dotenv()
 
@@ -47,7 +47,7 @@ def create_app():
     for processor in [processor1, processor2, processor3]:
         app.context_processor(processor)
     '''
-    for processor in [inject_theme_from_cookie, inject_user_profile_form]:
+    for processor in [inject_calendar_share_status_enums, inject_theme_from_cookie, inject_user_profile_form]:
         app.context_processor(processor)
 
     with app.app_context():
@@ -355,27 +355,38 @@ def change_password():
     return render_template('change_password.html', change_password_form=change_password_form)
 #endregion
 
-#region --- Page Routes ---
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
     return render_template('dashboard.html')
 
+#region --- Calendar Routes ---
 @app.route('/week-schedule', methods=['GET', 'POST'])
 @login_required
 def week_schedule():
     add_event_form = AddEventForm()
-    seq = str(current_user.id)
     dow = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     
     database_events = db.session.execute(
         select(CalendarEvent)
         .options(selectinload(CalendarEvent.recurring_days))
         .filter(CalendarEvent.user_id == current_user.id)
+        .order_by(CalendarEvent.start)
     ).scalars().all()
 
     edit_event_form = {e.id: EditEventForm(obj=e) for e in database_events}
     events = database_to_calendarview(database_events)
+    render_week_schedule(current_user, events)
+    image = get_or_create_calendar_image(current_user.id)
+
+    share_calendar_request_form = ShareCalendarRequestForm()
+    share_calendar_request_form.image_id.data = image.id
+
+    forms = {
+        'add_event_form': add_event_form,
+        'edit_event_form': edit_event_form,
+        'share_calendar_request_form': share_calendar_request_form,
+    }
 
     if request.method == 'POST':
         if add_event_form.validate_on_submit():
@@ -423,14 +434,13 @@ def week_schedule():
                 return redirect(url_for('week_schedule'))
 
             return redirect(url_for('week_schedule'))
-    
-    render_week_schedule(f"static/images/calendar/{seq}week.png", events)
-    return render_template('week_schedule.html.jinja', add_event_form=add_event_form, edit_event_form=edit_event_form, dbe=database_events, dow=dow,seq=seq)
+
+    return render_template('week_schedule.html.jinja', **forms, dbe=database_events, dow=dow, image=image.secure_token)
 
 @app.route('/edit-event/<int:event_id>', methods=['POST'])
 @login_required
 def edit_event(event_id):
-    edit_event_form = EditEventForm()
+    edit_event_form = EditEventForm(request.form)
     if edit_event_form.validate_on_submit():
         event = db.session.get(CalendarEvent, event_id)
         if event and event.user_id == current_user.id:
@@ -440,7 +450,7 @@ def edit_event(event_id):
             db.session.commit()
             flash("Update sucessful!", "success")
         else:
-            flash("Wut?!", "danger")
+            flash("Update unsucessful!", "danger")
     else:
         flash("Form validation failed.", 'warning')
     return redirect(url_for('week_schedule'))
@@ -456,6 +466,135 @@ def delete_event(event_id):
     else:
         flash("Unauthorized", 'danger')
     return redirect(url_for('week_schedule'))
+
+@app.route('/share-calendar-request', methods=['POST'])
+@login_required
+def share_calendar_request():
+    identifier = request.form.get('identifier')
+    image_id = request.form.get('image_id')
+
+    user = db.session.execute(
+        select(User).filter(
+            or_(User.username == identifier, User.email == identifier)
+        )
+    ).scalar_one_or_none()
+
+    if not user:
+        flash("User not found", 'danger')
+        return redirect(url_for('week_schedule'))
+    
+    if user.id == current_user.id:
+        flash("You already have access to your own schedule.", 'info')
+        return redirect(url_for('week_schedule'))
+    
+    existing = db.session.execute(
+        select(CalendarShare).filter_by(image_id=image_id, viewer_id=user.id)
+    ).scalar_one_or_none()
+
+    if existing:
+        if existing.status == CalendarShareStatus.PENDING:
+            flash("Request previously sent and pending.", 'info')
+        elif existing.status == CalendarShareStatus.DECLINED:
+            flash("Request previously sent but declined.", 'warning')
+        elif existing.status == CalendarShareStatus.ACCEPTED:
+            flash("That person already has access.", 'info')
+        return redirect(url_for('week_schedule'))
+    else:
+        share = CalendarShare(image_id=image_id, viewer_id=user.id)
+        db.session.add(share)
+        db.session.commit()
+        flash(f"Share request sent to {identifier}", 'success')
+        return redirect(url_for('week_schedule'))
+
+@app.route('/week-share', methods=['GET', 'POST'])
+@login_required
+def week_share():
+
+    def get_request_by_status(viewer_id, status):
+        return db.session.execute(
+            select(CalendarShare)
+            .join(CalendarShare.image)
+            .filter(CalendarShare.viewer_id == viewer_id)
+            .filter(CalendarShare.status == status)
+            .order_by(CalendarImage.last_update.desc())
+        ).scalars().all()
+
+    accepted_requests = get_request_by_status(current_user.id, CalendarShareStatus.ACCEPTED)
+    pending_requests = get_request_by_status(current_user.id, CalendarShareStatus.PENDING)
+
+    sent_requests = db.session.execute(
+        select(CalendarShare)
+        .join(CalendarImage, CalendarShare.image_id == CalendarImage.id)
+        .join(User, CalendarShare.viewer_id == User.id)
+        .filter(CalendarImage.owner_id == current_user.id)
+        .order_by(CalendarShare.status, User.username)
+    ).scalars().all()
+
+    requests = {
+        'accepted_requests': accepted_requests,
+        'pending_requests': pending_requests,
+        'sent_requests': sent_requests,
+    }
+
+    share_calendar_response_form = {req.id: ShareCalendarResponseForm(request_id=req.id) for req in pending_requests}
+
+    return render_template('week_share.html.jinja', **requests, share_calendar_response_form=share_calendar_response_form)
+
+@app.route('/share-response/<int:request_id>', methods=['POST'])
+@login_required
+def share_response(request_id):
+
+    share_calendar_response_form = ShareCalendarResponseForm(request.form)
+
+    if share_calendar_response_form.validate_on_submit():
+        share = db.session.get(CalendarShare, request_id)
+        if not share or share.viewer_id != current_user.id:
+            flash("Unauthorized request.", 'danger')
+            return redirect(url_for('week_share'))
+        
+        if share_calendar_response_form.submit_accept.data:
+            share.status = CalendarShareStatus.ACCEPTED
+            flash("Calendar share accepted.", 'success')
+        elif share_calendar_response_form.submit_decline.data:
+            share.status = CalendarShareStatus.DECLINED
+            flash("Calendar share declined.", "danger")
+        
+        db.session.commit()
+        return redirect(url_for('week_share'))
+
+@app.route('/delete-calendar-share-request/<int:request_id>', methods=['POST'])
+@login_required
+def delete_calendar_share_request(request_id):
+
+    share = db.session.execute(
+        select(CalendarShare)
+        .options(joinedload(CalendarShare.image))
+        .where(CalendarShare.id == request_id)
+    ).scalar_one_or_none()
+
+    viewer = share.viewer.username
+
+    db.session.delete(share)
+    db.session.commit()
+    flash(f"Request to share with {viewer} has been removed.", 'success')
+    return redirect(url_for('week_share'))
+
+@app.route('/delete-accetped-calendar-share/<int:request_id>', methods=['POST'])
+@login_required
+def delete_accepted_calendar_share(request_id):
+
+    share = db.session.get(CalendarShare, request_id)
+
+    if not share or share.viewer_id != current_user.id or share.status != CalendarShareStatus.ACCEPTED:
+        flash("Unauthorized", 'danger')
+        return redirect(url_for('week_share'))
+    
+    owner_username = share.image.owner.username
+    
+    db.session.delete(share)
+    db.session.commit()
+    flash(f"Stopped vieweing {owner_username}'s calendar.", 'info')
+    return redirect(url_for('week_share'))
 
 #endregion
 
