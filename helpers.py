@@ -64,11 +64,12 @@ def generate_time_choices(start_hour=0, end_hour=23, step_minutes=30, end_field=
     end = datetime.strptime(f"{end_hour:02}:30", "%H:%M")
 
     while current <= end:
-        label = current.strftime("%H:%M")
-        choices.append((label,label))
+        label = current.strftime("%I:%M %p")
+        value = current.strftime("%H:%M")
+        choices.append((value,label))
         current += timedelta(minutes=step_minutes)
     if end_field == True:
-        choices.append(('23:59', '23:59'))
+        choices.append(('23:59', '11:59 PM'))
     return choices
 
 def hex_to_rgba(hex_color, alpha):
@@ -79,12 +80,16 @@ def database_to_calendarview(data):
     events = []
     for event in data:
         for recurring_day in event.recurring_days:
+            start_str = event.start.strftime('%I:%M %p')
+            end_str = event.end.strftime('%I:%M %p')
+            title_with_time = f"{event.title}\n{start_str} - {end_str}"
+
             events.append(
                 Event(
                     day_of_week=recurring_day.day_of_week,
                     start=event.start.strftime('%H:%M'),
                     end=event.end.strftime('%H:%M'),
-                    title=event.title,
+                    title=title_with_time,
                     notes=event.notes,
                     style=EventStyle(
                         event_border=hex_to_rgba(event.color, 240),
@@ -117,6 +122,15 @@ def get_or_create_calendar_image(user_id):
     db.session.commit()
     return image
 
+def update_calendar_image(user_id):
+    image = db.session.execute(
+        select(CalendarImage)
+        .filter(CalendarImage.owner_id == user_id)
+    ).scalar_one_or_none()
+    if image:
+        image.last_update = date.today()
+        db.session.commit()
+
 def image_font(size: int, font_path="static/fonts/LibreBaskerville-Regular.ttf"):
     return ImageFont.truetype(font_path, size)
 
@@ -126,7 +140,7 @@ def render_week_schedule(user, events):
     style.image_bg = (200, 200, 200, 128)
     style.hour_height = 60
     style.title_font = image_font(80)
-    style.event_title_font = image_font(32)
+    style.event_title_font = image_font(25)
     style.day_of_week_font = image_font(32)
 
     config = data.CalendarConfig(

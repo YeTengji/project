@@ -15,7 +15,7 @@ from sqlalchemy.orm import joinedload, selectinload
 from context import inject_calendar_share_status_enums, inject_theme_from_cookie, inject_user_profile_form
 from extensions import csrf, db, login_manager, mail
 from forms import AddEventForm, ChangePasswordForm, EditEventForm, ForgotPasswordForm, LoginForm, ResetPasswordForm, ShareCalendarRequestForm, ShareCalendarResponseForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
-from helpers import database_to_calendarview, generate_secure_code, get_or_create_calendar_image, send_reset_code_email, render_week_schedule
+from helpers import database_to_calendarview, generate_secure_code, get_or_create_calendar_image, send_reset_code_email, render_week_schedule, update_calendar_image
 from models import CalendarEvent, CalendarEventDay, CalendarImage, CalendarShare, CalendarShareStatus, PreviousPassword, ResetCode, User, UserTheme
 
 load_dotenv()
@@ -426,6 +426,7 @@ def week_schedule():
 
             try:
                 db.session.commit()
+                update_calendar_image(current_user.id)
                 flash('Event added successfully!', 'success')
             except SQLAlchemyError as e:
                 db.session.rollback()
@@ -448,6 +449,7 @@ def edit_event(event_id):
             event.notes = edit_event_form.notes.data
             event.color = edit_event_form.color.data
             db.session.commit()
+            update_calendar_image(current_user.id)
             flash("Update sucessful!", "success")
         else:
             flash("Update unsucessful!", "danger")
@@ -462,6 +464,7 @@ def delete_event(event_id):
     if event and event.user_id == current_user.id:
         db.session.delete(event)
         db.session.commit()
+        update_calendar_image(current_user.id)
         flash("Event deleted sucessfully!", 'success')
     else:
         flash("Unauthorized", 'danger')
