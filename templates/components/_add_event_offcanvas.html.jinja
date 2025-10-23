@@ -25,6 +25,11 @@
             <!-- Day(s) of the Week -->
             <div class="col-md-12">
                 {{ add_event_form.day_of_week.label(class="form-label") }}
+
+                    <small class="form-text text-muted">
+                        (Recurring weekly)
+                    </small>
+
                 <div class="d-flex flex-wrap gap-3">
                     {% for subfield in add_event_form.day_of_week %}
                     <div class="form-check">
@@ -37,35 +42,50 @@
                 <div class="text-danger">{{ error }}</div>
                 {% endfor %}
             </div>
-        
-            <div class="col-md-12">
-                <button type="button" class="btn btn-sm btn-outline-secondary mb-2 w-100" id="addEventFormClearAllDays">Clear
-                    All</button>
+
+            <div class="col-md-8">
+                Or - Select A Specific Day
+                <div>
+                    <small class="form-text text-muted">
+                        (Overrides recurring days)
+                    </small>
+                </div>
+                {{ add_event_form.day(class="form-select col-md-6", id="addEventFormDayField") }}
+                {% for error in add_event_form.day.errors %}
+                <div class="text-danger">{{ error }}</div>
+                {% endfor %}
             </div>
         
+            <div class="col-md-4">
+                <button type="button" class="btn btn-sm btn-outline-secondary mb-2 w-100" id="addEventFormClearAllDays">
+                    Clear All Days
+                </button>
+            </div>
+
             <hr>
-        
-            <div class="col-md-6">
+
+            <div class="col-md-5">
                 {{ add_event_form.start.label(class="form-label") }}
                 {{ add_event_form.start(class="form-select", id="addEventFormStartField") }}
                 {% for error in add_event_form.start.errors %}
                 <div class="text-danger">{{ error }}</div>
                 {% endfor %}
             </div>
-            <div class="col-md-6">
+            <div class="col-md-5">
                 {{ add_event_form.end.label(class="form-label") }}
                 {{ add_event_form.end(class="form-select", id="addEventFormEndField") }}
                 {% for error in add_event_form.end.errors %}
                 <div class="text-danger">{{ error }}</div>
                 {% endfor %}
             </div>
-        
-            <hr>
-        
-            <div class="col-md-12">
+            <div class="col-md-2">
+                {{ add_event_form.color.label(class="form-label") }}
                 {{ add_event_form.color(class="event-color-select w-100") }}
             </div>
-            <div class="col-md-12 mt-5">
+
+            <hr>
+
+            <div class="col-md-12 mt-3">
                 {{ add_event_form.submit(class="btn btn-primary w-100") }}
             </div>
         </form>

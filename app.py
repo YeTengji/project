@@ -361,6 +361,7 @@ def dashboard():
     return render_template('dashboard.html')
 
 #region --- Calendar Routes ---
+
 @app.route('/week-schedule', methods=['GET', 'POST'])
 @login_required
 def week_schedule():
@@ -390,34 +391,53 @@ def week_schedule():
 
     if request.method == 'POST':
         if add_event_form.validate_on_submit():
+            print(add_event_form.day.data, add_event_form.day_of_week.data)
+            if add_event_form.day.data and add_event_form.day_of_week.data:
+                flash("Error selecting days.", 'warning')
+                return redirect(url_for('week_schedule'))
+            
             start_time = time.fromisoformat(add_event_form.start.data)
             end_time = time.fromisoformat(add_event_form.end.data)
 
-            conflict = db.session.execute(
-                select(CalendarEvent)
-                .join(CalendarEvent.recurring_days)
-                .filter(
-                    CalendarEvent.user_id == current_user.id,
-                    CalendarEventDay.day_of_week.in_(add_event_form.day_of_week.data),
-                    CalendarEvent.start < end_time,
-                    CalendarEvent.end > start_time
-                )
-            ).scalars().first()
+            if add_event_form.day.data:
+                conflict = db.session.execute(
+                    select(CalendarEvent)
+                    .filter(
+                        CalendarEvent.user_id == current_user.id,
+                        CalendarEvent.day == add_event_form.day.data,
+                        CalendarEvent.start < end_time,
+                        CalendarEvent.end > start_time
+                    )
+                ).scalars().first()
+            else:
+                conflict = db.session.execute(
+                    select(CalendarEvent)
+                    .join(CalendarEvent.recurring_days)
+                    .filter(
+                        CalendarEvent.user_id == current_user.id,
+                        CalendarEventDay.day_of_week.in_(add_event_form.day_of_week.data),
+                        CalendarEvent.start < end_time,
+                        CalendarEvent.end > start_time
+                    )
+                ).scalars().first()
 
             if conflict:
                 flash(f"Conflict with: '{conflict.title}'", 'warning')
                 return redirect(url_for('week_schedule'))
 
             new_event = CalendarEvent(
-                user_id = current_user.id,
-                title = add_event_form.title.data,
-                notes = add_event_form.notes.data,
-                start = start_time,
-                end = end_time,
-                color = add_event_form.color.data
+                user_id=current_user.id,
+                title=add_event_form.title.data,
+                notes=add_event_form.notes.data,
+                day=add_event_form.day.data if add_event_form.day.data else None,
+                start=start_time,
+                end=end_time,
+                color=add_event_form.color.data
             )
 
-            if add_event_form.day_of_week.data:
+            db.session.add(new_event)
+
+            if not add_event_form.day.data and add_event_form.day_of_week.data:
                 recurring_days = [
                     CalendarEventDay(day_of_week = day, event = new_event)
                     for day in add_event_form.day_of_week.data
@@ -427,7 +447,7 @@ def week_schedule():
             try:
                 db.session.commit()
                 update_calendar_image(current_user.id)
-                flash('Event added successfully!', 'success')
+                flash('Schedule added successfully!', 'success')
             except SQLAlchemyError as e:
                 db.session.rollback()
                 logging.error(f"Add event to database error: {e}")
@@ -507,7 +527,7 @@ def share_calendar_request():
         db.session.add(share)
         db.session.commit()
         flash(f"Share request sent to {identifier}", 'success')
-        return redirect(url_for('week_schedule'))
+        return redirect(url_for('week_share'))
 
 @app.route('/week-share', methods=['GET', 'POST'])
 @login_required

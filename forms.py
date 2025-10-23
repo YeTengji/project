@@ -122,6 +122,7 @@ class AddEventForm(FlaskForm):
     form_type = HiddenField('Form Type', default='add-event')
     title = StringField('Title', validators=[DataRequired(), Length (min=1, max=24)])
     notes = TextAreaField('Notes', render_kw={"rows":2, "maxlength":64}, validators=[Optional(), Length(max=64)])
+    day = DateField('Date', render_kw={"min": date.today().isoformat()}, validators=[Optional()])
     day_of_week = SelectMultipleField(
         'Day(s) of the Week',
         choices=[
@@ -145,10 +146,10 @@ class AddEventForm(FlaskForm):
     def validate(self, extra_validators=None):
         is_valid = super().validate(extra_validators)
         return is_valid
-    
-    def validate_day_of_week(self, field):
-        if not field.data or len(field.data) == 0:
-            raise ValidationError('Please select at least one day.')
+
+    def validate_day(self, field):
+        if field.data and field.data < date.today():
+            raise ValidationError("Date cannot be in the past.")
 
 class EditEventForm(FlaskForm):
     form_type = HiddenField('Form Type', default='edit-event')

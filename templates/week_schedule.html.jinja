@@ -6,29 +6,26 @@
 
 <div class="container-fluid my-3">
 
-    <div class="row justify-content-center mx-5">
+    <div class="row justify-content-center">
 
-        <div class="col-10">
+        <div class="col-xxl-9 mb-3">
             <img src="{{ url_for('static', filename='images/calendar/' + image + '.png') }}" class="img-fluid" alt="Owner's Calendar">
         </div>
 
-        <div class="col-2">
-            <div class="dropdown mb-3">
-                <a href="{{ url_for('week_share') }}" type="button" class="btn btn-outline-primary w-100" type="button">
-                    Collaborate
-                </a>
-            </div>
+        <div class="col-xxl-2">
+
             <div class="mb-3 w-100">
-                <a href="javascript:void(0)" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#shareCalendarRequestModal">
+                <a href="javascript:void(0)" class="btn btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#shareCalendarRequestModal">
                     Share My Calendar
                 </a>
             </div>
-            <div class="list-group scrollarea">
-                <div class="mb-2 w-100">
-                    <a href="javascript:void(0)" class="btn btn-outline-primary w-100" data-bs-toggle="offcanvas" data-bs-target="#addEventOffcanvas">
-                        Add New Schedule
-                    </a>
-                </div>
+            <div class="mb-1 w-100">
+                <a href="javascript:void(0)" class="btn btn-outline-secondary w-100" data-bs-toggle="offcanvas"
+                    data-bs-target="#addEventOffcanvas">
+                    Add New Schedule
+                </a>
+            </div>
+            <div class="list-group scrollarea overflow-auto" style="max-height: 76vh;">
                 {% if dbe %}
                 {% for e in dbe %}
                 <a href="#" class="list-group-item list-group-item-action" style="background-color: {{ e.color }};" data-bs-toggle="modal" data-bs-target="#editEventModal{{ e.id }}">

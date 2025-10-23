@@ -6,9 +6,9 @@
 
 <div class="container-fluid my-3">
 
-    <div class="row justify-content-center mx-5">
+    <div class="row justify-content-center">
 
-        <div class="col-10">
+        <div class="col-xxl-9 mb-3">
         {% if accepted_requests %}
             <div id="carouselSharedImages" class="carousel slide">
                 <div class="carousel-inner">
@@ -24,12 +24,7 @@
         {% endif %}
         </div>
 
-        <div class="col-2">
-            <div class="mb-3">
-                <a href="{{ url_for('week_schedule') }}" type="button" class="btn btn-outline-primary w-100" type="button">
-                    My Week
-                </a>
-            </div>
+        <div class="col-xxl-2">
 
             <div class="mb-3">
                 <ul class="list-group">
@@ -59,7 +54,7 @@
                         {% endfor %}
                     {% else %}
                         <li class="list-group-item">
-                            <p>No shares accepted yet</p>
+                            <hr>
                         </li>
                     {% endif %}
                 </ul>
@@ -115,7 +110,7 @@
                         {% endfor %}
                     {% else %}
                     <li class="list-group-item">
-                        <p>No requests sent yet.</p>
+                        <hr>
                     </li>
                     {% endif %}
                 </ul>

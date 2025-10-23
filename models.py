@@ -78,6 +78,7 @@ class CalendarEvent(db.Model):
     start: Mapped[time] = mapped_column(Time(), nullable=False)
     end: Mapped[time] = mapped_column(Time(), nullable=False)
     color: Mapped[str] = mapped_column(String(7), nullable=False)
+    day: Mapped[date] = mapped_column(Date(), nullable=True)
 
     user = relationship('User', back_populates='calendar_events')
     recurring_days = relationship('CalendarEventDay', back_populates='event', cascade='all, delete-orphan')
@@ -128,3 +129,4 @@ class CalendarShare(db.Model):
 
     image = relationship('CalendarImage', back_populates='viewers')
     viewer = relationship('User', backref='received_calendar_images')
+

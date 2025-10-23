@@ -78,15 +78,51 @@ def hex_to_rgba(hex_color, alpha):
 
 def database_to_calendarview(data):
     events = []
+
+    one_time_events_by_weekday = {}
     for event in data:
-        for recurring_day in event.recurring_days:
+        if event.day:
+            weekday = event.day.weekday()
+            one_time_events_by_weekday.setdefault(weekday, []).append(event)
+
             start_str = event.start.strftime('%I:%M %p')
             end_str = event.end.strftime('%I:%M %p')
             title_with_time = f"{event.title}\n{start_str} - {end_str}"
 
             events.append(
                 Event(
-                    day_of_week=recurring_day.day_of_week,
+                    day=event.day.strftime('%Y-%m-%d'),
+                    start=event.start.strftime('%H:%M'),
+                    end=event.end.strftime('%H:%M'),
+                    title=title_with_time,
+                    notes=event.notes,
+                    style=EventStyle(
+                        event_border=hex_to_rgba(event.color, 240),
+                        event_fill=hex_to_rgba(event.color, 192)
+                    )
+                )
+            )
+
+    for event in data:
+        for recurring_day in event.recurring_days:
+            weekday = recurring_day.day_of_week
+
+            overlaps = False
+            for one_time_event in one_time_events_by_weekday.get(weekday, []):
+                if event.start < one_time_event.end and event.end > one_time_event.start:
+                    overlaps = True
+                    break
+                
+            if overlaps:
+                continue
+
+            start_str = event.start.strftime('%I:%M %p')
+            end_str = event.end.strftime('%I:%M %p')
+            title_with_time = f"{event.title}\n{start_str} - {end_str}"
+
+            events.append(
+                Event(
+                    day_of_week=weekday,
                     start=event.start.strftime('%H:%M'),
                     end=event.end.strftime('%H:%M'),
                     title=title_with_time,

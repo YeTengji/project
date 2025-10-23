@@ -147,11 +147,29 @@ function addEventFormFunctions() {
     const startSelect = document.getElementById('addEventFormStartField');
     const endSelect = document.getElementById('addEventFormEndField');
     const clearAllDays = document.getElementById('addEventFormClearAllDays');
+    const dayField = document.getElementById('addEventFormDayField')
     const daysOfWeekInput = document.querySelectorAll('input[name="day_of_week"]')
-    if (!startSelect || !endSelect || !clearAllDays || !daysOfWeekInput) { return }
+    if (!startSelect || !endSelect || !clearAllDays || !dayField || daysOfWeekInput.length === 0) { return }
 
     clearAllDays.addEventListener('click', () => {
         daysOfWeekInput.forEach(el => { el.disabled = false; el.checked = false; });
+        dayField.disabled = false;
+    });
+
+    daysOfWeekInput.forEach(el => {
+        el.addEventListener('change', () => {
+            const anyChecked = Array.from(daysOfWeekInput).some(el => el.checked);
+            dayField.value = '';
+            dayField.disabled = anyChecked;
+        });
+    });
+
+    dayField.addEventListener('change', () => {
+        if (dayField.value) {
+            daysOfWeekInput.forEach(el => el.disabled = true);
+        } else {
+            daysOfWeekInput.forEach(el => el.disabled = false);
+        }
     });
 
     function filterEndOptions() {

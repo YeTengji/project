@@ -27,12 +27,11 @@
                     {% if current_user.is_authenticated %}
                         <ul class="navbar-nav col-lg-6 justify-content-lg-center">
                             {% macro nav_item(endpoint, label) %}
-                            <li class="nav-item"> <a class="nav-link {% if request.endpoint == endpoint %}active{% endif %}" href="{{ url_for(endpoint) }}">{{ label }}</a> </li>
+                            <li class="nav-item px-3"> <a class="nav-link {% if request.endpoint == endpoint %}active{% endif %}" href="{{ url_for(endpoint) }}">{{ label }}</a> </li>
                             {% endmacro %}
-                            {{ nav_item('dashboard', 'Dashboard') | safe}}
-                            {{ nav_item('week_schedule', 'Week') | safe }}
-                            <!--li class="nav-item"> <a class="nav-link" href="{{ url_for('week_schedule') }}">Week</a> </li>
-                            <li class="nav-item"> <a class="nav-link" href="#">Upkeep</a> </li-->
+                            {{ nav_item('dashboard', 'Dashboard') }}
+                            {{ nav_item('week_schedule', 'Week') }}
+                            {{ nav_item('week_share', 'Collaborate')}}
                         </ul>
                         <div class="d-lg-flex col-lg-3 justify-content-lg-end gap-2">
                             <div class="dropdown">
