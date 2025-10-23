@@ -391,8 +391,7 @@ def week_schedule():
 
     if request.method == 'POST':
         if add_event_form.validate_on_submit():
-            print(add_event_form.day.data, add_event_form.day_of_week.data)
-            if add_event_form.day.data and add_event_form.day_of_week.data:
+            if (add_event_form.day.data and add_event_form.day_of_week.data) or (not add_event_form.day.data and not add_event_form.day_of_week.data):
                 flash("Error selecting days.", 'warning')
                 return redirect(url_for('week_schedule'))
             
@@ -464,6 +463,17 @@ def edit_event(event_id):
     edit_event_form = EditEventForm(request.form)
     if edit_event_form.validate_on_submit():
         event = db.session.get(CalendarEvent, event_id)
+
+        unchanged = (
+            edit_event_form.title.data == event.title and
+            edit_event_form.notes.data == event.notes and
+            edit_event_form.color.data == event.color
+        )
+
+        if unchanged:
+            flash("No changes detected.", "info")
+            return redirect(url_for('week_schedule'))
+
         if event and event.user_id == current_user.id:
             event.title = edit_event_form.title.data
             event.notes = edit_event_form.notes.data

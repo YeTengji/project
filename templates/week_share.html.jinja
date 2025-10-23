@@ -66,11 +66,11 @@
                     {% for request in pending_requests %}
                     <li class="list-group-item">
                         Share request from <strong>{{ request.image.owner.username}}</strong>
-                        <form class="my-1" method="POST" action="{{ url_for('share_response', request_id=request.id) }}">
+                        <form class="my-1 d-flex justify-content-evenly" method="POST" action="{{ url_for('share_response', request_id=request.id) }}">
                             {{ share_calendar_response_form[request.id].hidden_tag() }}
                             {{ share_calendar_response_form[request.id].request_id(value=request.id)}}
-                            {{ share_calendar_response_form[request.id].submit_accept(class="btn btn-primary btn-sm") }}
-                            {{ share_calendar_response_form[request.id].submit_decline(class="btn btn-primary btn-sm") }}                        
+                            {{ share_calendar_response_form[request.id].submit_accept(class="btn btn-outline-success btn-sm") }}
+                            {{ share_calendar_response_form[request.id].submit_decline(class="btn btn-outline-danger btn-sm") }}                        
                         </form>
                     </li>
                     {% endfor %}

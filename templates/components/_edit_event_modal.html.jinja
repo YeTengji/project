@@ -4,7 +4,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content p-5">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="editEventModalLabel{{ e.id }}">Edit Event</h1>
+                <h1 class="modal-title fs-5" id="editEventModalLabel{{ e.id }}">Edit Schedule</h1>
             </div>
             <div class="modal-body">
                 
@@ -28,24 +28,27 @@
 
                     <hr>
 
-                    <div class="d-flex">
-                        <div class="col-6">
+                    <div class="d-flex justify-content-between">
+                        <div class="col-2">
                             {{ edit_event_form[e.id].color(class="event-color-select w-100") }}
                         </div>
-                        <div class="d-flex justify-content-end col-3">
-                            {{ edit_event_form[e.id].submit(class="btn btn-primary") }}
-                        </div>
-                        <div class="d-flex justify-content-end col-3">
-                            <button type="button" class="btn btn-primary" data-bs-target="#deleteEventModal{{ e.id }}" data-bs-toggle="modal">Delete</button>
+                        <div class="col-8">
+                            {{ edit_event_form[e.id].submit(class="btn btn-primary w-100") }}
                         </div>
                     </div>
                 </form>
 
             </div>
             <div class="modal-footer">
-                <form method="GET" action="{{ url_for('week_schedule') }}">
-                    <button type="submit" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                </form>
+                <div class="d-flex justify-content-end">
+                    <button type="button" class="btn btn-primary" data-bs-target="#deleteEventModal{{ e.id }}"
+                        data-bs-toggle="modal">Remove Schedule</button>
+                </div>
+                <div>
+                    <form method="GET" action="{{ url_for('week_schedule') }}">
+                        <button type="submit" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

@@ -44,9 +44,15 @@
                             </div>
                         </div>
                         <div class="col-4">
-                            {% for r in e.recurring_days %}
-                            <small class="me-1">{{ dow[r.day_of_week] }}</small>
-                            {% endfor %}
+                            {% if e.recurring_days %}
+                                {% for r in e.recurring_days %}
+                                <small class="me-1">{{ dow[r.day_of_week] }}</small>
+                                {% endfor %}
+                            {% elif e.day %}
+                                {{ e.day.strftime('%B %d, %Y') }}
+                            {% else %}
+                                Nothing
+                            {% endif %}
                         </div>
                     </div>
                 </a>

@@ -145,6 +145,13 @@ class AddEventForm(FlaskForm):
 
     def validate(self, extra_validators=None):
         is_valid = super().validate(extra_validators)
+
+        if not self.day.data and not self.day_of_week.data:
+            self.day_of_week.errors.append("Please select at least one recurring day...")
+            self.day.errors.append("...or a specific date")
+
+            return False
+
         return is_valid
 
     def validate_day(self, field):

@@ -146,10 +146,16 @@ function injectCountryTimezone(formCountry, formTimeZone) {
 function addEventFormFunctions() {
     const startSelect = document.getElementById('addEventFormStartField');
     const endSelect = document.getElementById('addEventFormEndField');
+    const selectAllDays = document.getElementById('addEventFormSelectAllDays')
     const clearAllDays = document.getElementById('addEventFormClearAllDays');
     const dayField = document.getElementById('addEventFormDayField')
     const daysOfWeekInput = document.querySelectorAll('input[name="day_of_week"]')
-    if (!startSelect || !endSelect || !clearAllDays || !dayField || daysOfWeekInput.length === 0) { return }
+    if (!startSelect || !endSelect || !selectAllDays || !clearAllDays || !dayField || daysOfWeekInput.length === 0) { return }
+
+    selectAllDays.addEventListener('click', () => {
+        daysOfWeekInput.forEach(el => { el.disabled = false; el.checked = true; });
+        dayField.disabled = true;
+    });
 
     clearAllDays.addEventListener('click', () => {
         daysOfWeekInput.forEach(el => { el.disabled = false; el.checked = false; });
