@@ -14,7 +14,7 @@ from calendar_view.calendar import Calendar
 from calendar_view.config import style
 from calendar_view.config.style import image_font
 from calendar_view.core import data
-from calendar_view.core.event import Event, EventStyle, EventStyles
+from calendar_view.core.event import Event, EventStyle
 
 from PIL import ImageFont
 

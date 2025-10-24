@@ -30,7 +30,7 @@
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="deleteAcceptedCalendarShareModalLabel">Delete Share Request</h1>
+                <h1 class="modal-title fs-5" id="deleteAcceptedCalendarShareModalLabel">Remove Collaborator</h1>
             </div>
             <div class="modal-body">
                 <span id="deleteAcceptedCalendarShareModalMessage"></span>
@@ -40,7 +40,7 @@
                 <form method="POST" id="deleteAcceptedCalendarShareModalForm"
                     data-base-url="{{ url_for('delete_accepted_calendar_share', request_id=0) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-primary">Delete</button>
+                    <button type="submit" class="btn btn-primary">Remove</button>
                 </form>
             </div>
         </div>

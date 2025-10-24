@@ -184,7 +184,6 @@ def verify_password_reset_code():
 
     if request.method == 'POST':
         if verify_password_reset_code_form.validate_on_submit():
-            print('here!')
             code = db.session.execute(select(ResetCode).where(
                 ResetCode.code == verify_password_reset_code_form.code.data
                 )
@@ -196,7 +195,6 @@ def verify_password_reset_code():
                 db.session.commit()
                 return redirect(url_for('reset_password'))
             else:
-                print('no')
                 flash('Invalid code.', 'danger')
                 return redirect(url_for('verify_password_reset_code'))
             
@@ -628,6 +626,12 @@ def delete_accepted_calendar_share(request_id):
     db.session.commit()
     flash(f"Stopped vieweing {owner_username}'s calendar.", 'info')
     return redirect(url_for('week_share'))
+
+@app.route('/print-calendar/<image>')
+@login_required
+def print_calendar(image):
+    img_source = request.args.get('img_source')
+    return render_template('print_calendar.html.jinja', image=image, img_source=img_source)
 
 #endregion
 

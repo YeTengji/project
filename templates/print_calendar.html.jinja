@@ -1,0 +1,24 @@
+{% extends "layout.html.jinja" %}
+
+{% block title %}Print Calendar{% endblock %}
+
+{% block body %}
+
+<div class="container-fluid">
+{% if img_source == 'owner' %}
+    <a href="{{ url_for('week_schedule') }}">
+{% elif img_source == 'collaborator' %}
+    <a href="{{ url_for('week_share') }}">
+{% endif %}
+        <img src="{{ url_for('static', filename='images/calendar/' + image + '.png') }}" class="img-fluid"
+        alt="SelectedCalendar">
+    </a>
+
+    <div id="print-calendar" class="no-print">
+        <button class="btn btn-warning" onclick="window.print()">Print</button>
+    </div>
+
+</div>
+
+
+{% endblock %}

@@ -29,6 +29,24 @@ body {
     transform-origin: center;
 }
 
+#print-calendar {
+    position:fixed;
+    top: 5rem;
+    right: 3rem;
+    z-index: 1000;
+}
+
 .login-group {
     height: calc(100vh - 72px);
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    @page {
+        margin: 0;
+        size: landscape;
+    }
 }

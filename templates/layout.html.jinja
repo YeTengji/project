@@ -16,7 +16,8 @@
 </head>
 
 <body>
-    <header>
+    {% if not img_source %}
+    <header class="no-print">
         <!-- Centered Navbar from Bootstrap Examples-->
         <nav class="navbar fixed-top navbar-expand-lg bg-body-tertiary rounded" aria-label="Thirteenth navbar example">
             <div class="container-fluid"> <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -54,6 +55,7 @@
             </div>
         </nav>
     </header>
+    {% endif %}
 
     {% block body %}{% endblock %}
 
@@ -62,7 +64,7 @@
     {% endif %}
 
     <!-- Flash Messages-->
-    <div id="flash-alert-container" class="position-fixed bottom-0 start-50 translate-middle-x mb-5 z-3"
+    <div id="flash-alert-container" class="position-fixed bottom-0 start-50 translate-middle-x mb-5 z-3 no-print"
         style="width: 100%; max-width: 600px;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}

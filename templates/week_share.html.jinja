@@ -1,6 +1,6 @@
 {% extends "layout.html.jinja" %}
 
-{% block title %}Week Share{% endblock %}
+{% block title %}Collaborate{% endblock %}
 
 {% block body %}
 
@@ -14,7 +14,9 @@
                 <div class="carousel-inner">
                 {% for request in accepted_requests %}
                     <div class="carousel-item {% if loop.first %}active{% endif %}">
-                        <img src="{{ url_for('static', filename='images/calendar/' + request.image.secure_token + '.png') }}" class="img-fluid" alt="...">
+                        <a href="{{ url_for('print_calendar', image=request.image.secure_token, img_source='collaborator') }}">
+                            <img src="{{ url_for('static', filename='images/calendar/' + request.image.secure_token + '.png') }}" class="img-fluid" alt="...">
+                        </a>
                     </div>
                 {% endfor %}
                 </div>
