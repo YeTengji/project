@@ -291,7 +291,7 @@ def user_profile():
         flash("Profile updated!", "success")
         return redirect(url_for('dashboard'))
     
-    return render_template('dashboard.html', user_profile_form=user_profile_form, show_user_profile_modal=True)
+    return render_template('dashboard.html.jinja', user_profile_form=user_profile_form, show_user_profile_modal=True)
 
 @app.route('/update-theme', methods=['POST'])
 @login_required
@@ -356,7 +356,30 @@ def change_password():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    now = datetime.now()
+    current_time = now.time()
+    current_date = now.date()
+    current_day_of_week = now.weekday()
+
+    curent_events = (
+        db.session.execute(
+            select(CalendarEvent)
+            .filter(CalendarEvent.user_id == current_user.id,
+                or_(
+                    CalendarEvent.day == current_date,
+                    CalendarEvent.recurring_days.any(CalendarEventDay.day_of_week == current_day_of_week)
+                )
+            ).order_by(CalendarEvent.start)
+        ).scalars().all()
+    )
+
+    share_request = db.session.execute(
+            select(CalendarShare)
+            .filter(CalendarShare.viewer_id == current_user.id)
+            .filter(CalendarShare.status == CalendarShareStatus.PENDING)
+        ).scalars().first()
+
+    return render_template('dashboard.html.jinja', current_events=curent_events, share_request=share_request, current_time=current_time, current_date=current_date)
 
 #region --- Calendar Routes ---
 

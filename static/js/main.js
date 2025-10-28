@@ -291,6 +291,35 @@ function deleteAcceptedCalendarShare() {
     });
 }
 
+// Clock
+let lastSecond = null;
+
+function updateClock() {
+    const now = new Date();
+    const sec = now.getSeconds();
+    const min = now.getMinutes();
+    const hr = now.getHours();
+
+    seconds = document.getElementById('second');
+    minutes = document.getElementById('minute');
+    hours = document.getElementById('hour');
+    if (!seconds || !minutes || ! hours) return;
+
+    if (lastSecond === 59 && sec === 0) {
+        seconds.style.transition = 'none';
+    } else {
+        seconds.style.transition = 'transform 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
+    }
+    seconds.style.transform = `rotate(${sec * 6}deg)`;
+    minutes.style.transform = `rotate(${min * 6}deg)`;
+    hours.style.transform = `rotate(${(hr % 12) * 30 + min * 0.5}deg)`;
+
+    lastSecond = sec;
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+
 // Main?
 document.addEventListener("DOMContentLoaded", () => {
     formFieldFocus({

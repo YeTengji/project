@@ -66,8 +66,13 @@
                 <ul class="list-group">
                 {% if pending_requests %}
                     {% for request in pending_requests %}
-                    <li class="list-group-item">
-                        Share request from <strong>{{ request.image.owner.username}}</strong>
+                    <li class="list-group-item text-center share-request">
+                        <div>
+                            Share request from
+                        </div>
+                        <div class="py-1">
+                            <strong>{{ request.image.owner.username}}</strong>
+                        </div>
                         <form class="my-1 d-flex justify-content-evenly" method="POST" action="{{ url_for('share_response', request_id=request.id) }}">
                             {{ share_calendar_response_form[request.id].hidden_tag() }}
                             {{ share_calendar_response_form[request.id].request_id(value=request.id)}}

@@ -1,0 +1,78 @@
+{% extends "layout.html.jinja" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+
+<div class="container-fluid">
+
+    <div class="row align-items-start">
+
+        <div class="col-xl-2">
+        </div>
+
+        <div class="col-xl-4">
+
+            <div class="d-flex justify-content-center p-5">
+                <div class="clock m-3">
+                    <div class="hand hour" id="hour"></div>
+                    <div class="hand minute" id="minute"></div>
+                    <div class="hand second" id="second"></div>
+                    <div class="center-dot"></div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center p-5">
+                {% if share_request %}
+                <a href="{{  url_for('week_share') }}" class="btn btn-outline-primary share-request">
+                    Someone wants to share their calendar with you.
+                </a>
+                {% else %}
+                Alerts
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-xl-4 p-3">
+
+            <div class="d-flex justify-content-center p-5">
+                <div class="dashboard-calendar">
+                    <div class="dashboard-calendar-top">
+                        <span id="dashboard-calendar-month">{{ current_date.strftime('%B') }}</span>
+                    </div>
+                    <div id="dashboard-calendar-day">{{ current_date.strftime('%d') }}</div>
+                    <div id="dashboard-calendar-dow">{{ current_date.strftime('%A') }}</div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center">
+                {% if current_events %}
+                    <ul class="list-group w-75">
+                    {% for event in current_events %}
+                        <li class="list-group-item {% if event.end < current_time %}text-muted{% endif %}"
+                            {% if event.start <= current_time and current_time <= event.end %}style="background-color: {{ event.color }};"{% endif %}>
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ event.title }}</strong>
+                                {{ event.start.strftime('%I:%M %p') }} - {{ event.end.strftime('%I:%M %p') }}
+                            </div>
+                            <small>{{ event.notes }}</small>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="d-flex justify-content-center m-5">
+                        Nothing Happening Today
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <div class="col-xl-2">
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}

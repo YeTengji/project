@@ -1,0 +1,109 @@
+/* Clock CSS */
+
+.clock {
+    position: relative;
+    height: 300px;
+    width: 300px;
+    aspect-ratio: 1 / 1;
+    border: 8px solid #000;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 90%, #888);
+    background-image: url('/static/images/clock_face.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.hand {
+    position: absolute;
+    bottom: 50%;
+    left: 50%;
+    transform-origin: bottom center;
+    transform: rotate(0deg) translate(-50%);
+    background: #333;
+}
+
+.hour {
+    width: 6px;
+    height: 25%;
+    z-index: 3;
+}
+
+.minute {
+    width: 4px;
+    height: 35%;
+    z-index: 2;
+}
+
+.second {
+    width: 2px;
+    height: 45%;
+    background: red;
+    z-index: 1;
+}
+
+.center-dot {
+    position: absolute;
+    width: 5%;
+    height: 5%;
+    background: #333;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Day Calendar */
+
+.dashboard-calendar {
+    width: 300px;
+    height: 300px;
+    min-width: 300px;
+    min-height: 300px;
+    background-color: #ffec9e;
+    border-radius: 10%;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    flex-shrink: 0;
+    flex-direction: column;
+}
+
+.dashboard-calendar-top {
+    width: 100%;
+    height: 75px;
+    background-color: #D9534F;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#dashboard-calendar-month {
+    font-family: 'Limelight', sans-serif;
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+#dashboard-calendar-dow {
+    font-family: 'Limelight', sans-serif;
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #000;
+    text-transform: uppercase;
+}
+
+#dashboard-calendar-day {
+    font-family: 'Roboto-Bold', sans-serif;
+    font-size: 8rem;
+    font-weight: 700;
+    color: #000;
+    padding-top: 64px;
+    line-height: 1;
+}

@@ -78,10 +78,17 @@ def hex_to_rgba(hex_color, alpha):
 
 def database_to_calendarview(data):
     events = []
+    today = datetime.now().date()
+    start = today - timedelta(days=today.weekday() + 1 if today.weekday() != 6 else 0)
+    end = start + timedelta(days=6)
 
     one_time_events_by_weekday = {}
     for event in data:
         if event.day:
+
+            if not (start <= event.day <= end):
+                continue
+
             weekday = event.day.weekday()
             one_time_events_by_weekday.setdefault(weekday, []).append(event)
 
