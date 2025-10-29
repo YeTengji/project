@@ -15,8 +15,8 @@ from sqlalchemy.orm import joinedload, selectinload
 from context import inject_calendar_share_status_enums, inject_theme_from_cookie, inject_user_profile_form
 from extensions import csrf, db, login_manager, mail
 from forms import AddEventForm, ChangePasswordForm, EditEventForm, ForgotPasswordForm, LoginForm, ResetPasswordForm, ShareCalendarRequestForm, ShareCalendarResponseForm, SignUpForm, UserProfileForm, VerifyPasswordResetCodeForm
-from helpers import database_to_calendarview, generate_secure_code, get_or_create_calendar_image, send_reset_code_email, render_week_schedule, update_calendar_image
-from models import CalendarEvent, CalendarEventDay, CalendarImage, CalendarShare, CalendarShareStatus, PreviousPassword, ResetCode, User, UserTheme
+from helpers import database_to_calendarview, generate_secure_code, get_or_create_calendar_image, inspire, send_reset_code_email, render_week_schedule, update_calendar_image
+from models import CalendarEvent, CalendarEventDay, CalendarImage, CalendarShare, CalendarShareStatus, NotepadData, PreviousPassword, ResetCode, User, UserTheme
 
 load_dotenv()
 
@@ -353,13 +353,34 @@ def change_password():
     return render_template('change_password.html', change_password_form=change_password_form)
 #endregion
 
+#region --- Dashbaord Routes ---
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
     now = datetime.now()
+    today = now.strftime("%Y-%m-%d")
     current_time = now.time()
     current_date = now.date()
     current_day_of_week = now.weekday()
+
+    if session.get("quote_date") != today:
+        quote_data = inspire()
+        session["quote"] = quote_data
+        session["quote_date"] = today
+
+    inspiration = session.get("quote")
+    quote = {
+        "text": inspiration[0]["q"],
+        "author": inspiration[0]["a"]
+    }
+
+    notepad = db.session.execute(
+        select(NotepadData)
+        .filter(NotepadData.user_id == current_user.id)
+    ).scalars().first()
+
+    if not notepad:
+        notepad = NotepadData(title='To-Do List', body=[])
 
     curent_events = (
         db.session.execute(
@@ -379,7 +400,32 @@ def dashboard():
             .filter(CalendarShare.status == CalendarShareStatus.PENDING)
         ).scalars().first()
 
-    return render_template('dashboard.html.jinja', current_events=curent_events, share_request=share_request, current_time=current_time, current_date=current_date)
+    return render_template('dashboard.html.jinja', current_events=curent_events, share_request=share_request, current_time=current_time, current_date=current_date, notepad=notepad, quote=quote)
+
+@app.route('/api/notes', methods=['POST'])
+@login_required
+def save_note():
+    data = request.get_json()
+    note = db.session.execute(
+        select(NotepadData)
+        .filter(NotepadData.user_id == current_user.id)
+    ).scalars().first()
+
+    if note:
+        note.title = data['title']
+        note.body = data['body']
+    else:
+        note = NotepadData(
+            user_id=current_user.id,
+            title= data.get('title', 'To-Do List'),
+            body=data['body']
+        )
+        db.session.add(note)
+
+    db.session.commit()
+    return jsonify({'status': 'saved', 'note_id': note.id})
+
+#endregion
 
 #region --- Calendar Routes ---
 

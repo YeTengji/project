@@ -5,15 +5,20 @@
 {% block body %}
 
 <div class="container-fluid">
+    <div class="row">
+        <div class="col-xl-12">
+            <blockquote class="blockquote text-center p-3">
+                <p><em>"{{ quote.text }}"</em></p>
+                <footer class="blockquote-footer py-3">{{ quote.author }}</footer>
+            </blockquote>
+        </div>
+    </div>
 
     <div class="row align-items-start">
 
-        <div class="col-xl-2">
-        </div>
-
         <div class="col-xl-4">
 
-            <div class="d-flex justify-content-center p-5">
+            <div class="d-flex justify-content-center p-3">
                 <div class="clock m-3">
                     <div class="hand hour" id="hour"></div>
                     <div class="hand minute" id="minute"></div>
@@ -22,20 +27,55 @@
                 </div>
             </div>
 
-            <div class="d-flex justify-content-center p-5">
-                {% if share_request %}
-                <a href="{{  url_for('week_share') }}" class="btn btn-outline-primary share-request">
-                    Someone wants to share their calendar with you.
-                </a>
-                {% else %}
-                Alerts
-                {% endif %}
+            <div class="d-flex justify-content-center py-3">
+                <div class="list-group">
+                    {% if share_request %}
+                    <a href="{{  url_for('week_share') }}" id="share-request" class="list-group-item list-group-item-action share-request">
+                        Someone wants to share their calendar with you.
+                    </a>
+                    {% else %}
+                    <a href="javascript:void(0)" class="list-group-item">
+                        -- --
+                    </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
-        <div class="col-xl-4 p-3">
+        <div class="col-xl-4">
+        
+            <div class="d-flex justify-content-center px-3">
+                <div id="notepad" data-csrf="{{ csrf_token() }}">
+                    <div id="notepadTitle" class="text-center pt-3 pb-1" contenteditable="true">{{ notepad.title }}</div>
+                    <ul id="notepadBody">
+                        {% if notepad.body %}
+                        {% for item in notepad.body %}
+                        <li>
+                            <input type="checkbox" class="form-check-input me-2" {% if item.checked %}checked{% endif %}>
+                            <span class="{% if item.checked %}checked{% endif %}" contenteditable="true">{{ item.text }}</span>
+                            <button class="btn btn-sm btn-link delete-line" title="Delete item">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </li>
+                        {% endfor %}
+                        {% else %}
+                        <li>
+                            <input type="checkbox" class="form-check-input me-2">
+                            <span class="" contenteditable="true">Title and items can be edited</span>
+                            <button class="btn btn-sm btn-link delete-line" title="Delete item">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        
+        </div>
 
-            <div class="d-flex justify-content-center p-5">
+        <div class="col-xl-4 mb-5">
+
+            <div class="d-flex justify-content-center p-3">
                 <div class="dashboard-calendar">
                     <div class="dashboard-calendar-top">
                         <span id="dashboard-calendar-month">{{ current_date.strftime('%B') }}</span>
@@ -44,11 +84,10 @@
                     <div id="dashboard-calendar-dow">{{ current_date.strftime('%A') }}</div>
                 </div>
             </div>
-
             <div class="d-flex justify-content-center">
-                {% if current_events %}
-                    <ul class="list-group w-75">
-                    {% for event in current_events %}
+                <ul class="list-group w-75">
+                    {% if current_events %}
+                        {% for event in current_events %}
                         <li class="list-group-item {% if event.end < current_time %}text-muted{% endif %}"
                             {% if event.start <= current_time and current_time <= event.end %}style="background-color: {{ event.color }};"{% endif %}>
                             <div class="d-flex justify-content-between">
@@ -57,19 +96,19 @@
                             </div>
                             <small>{{ event.notes }}</small>
                         </li>
-                    {% endfor %}
-                    </ul>
-                {% else %}
-                    <div class="d-flex justify-content-center m-5">
-                        Nothing Happening Today
-                    </div>
-                {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <a href="{{ url_for('week_schedule') }}"  class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-center m-3">
+                                Nothing Scheduled Today
+                            </div>
+                        </a>
+                    {% endif %}
+                </ul>
             </div>
 
         </div>
 
-        <div class="col-xl-2">
-        </div>
     </div>
 
 </div>

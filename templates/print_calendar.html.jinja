@@ -5,17 +5,18 @@
 {% block body %}
 
 <div class="container-fluid">
-{% if img_source == 'owner' %}
-    <a href="{{ url_for('week_schedule') }}">
-{% elif img_source == 'collaborator' %}
-    <a href="{{ url_for('week_share') }}">
-{% endif %}
-        <img src="{{ url_for('static', filename='images/calendar/' + image + '.png') }}" class="img-fluid"
-        alt="SelectedCalendar">
-    </a>
+    <img src="{{ url_for('static', filename='images/calendar/' + image + '.png') }}" class="img-fluid"
+    alt="SelectedCalendar">
 
-    <div id="print-calendar" class="no-print">
-        <button class="btn btn-warning" onclick="window.print()">Print</button>
+    <div id="print-calendar" class="d-flex justify-content-between no-print">
+        {% if img_source == 'owner' %}
+            <a class="btn btn-outline-warning w-50 me-3" href="{{ url_for('week_schedule') }}">
+        {% elif img_source == 'collaborator' %}
+            <a class="btn btn-outline-warning w-50 me-3" href="{{ url_for('week_share') }}">
+        {% endif %}
+        Exit
+        </a>
+        <button class="btn btn-outline-warning w-50" onclick="window.print()">Print</button>
     </div>
 
 </div>

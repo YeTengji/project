@@ -7,7 +7,7 @@
 <div class="container login-group d-flex justify-content-center align-items-center">
     <div class="row w-100 align-items-stretch">
 
-        <div class="col-md-7 d-flex overflow-hidden p-0">
+        <div class="col-md-7 d-flex overflow-hidden p-0 rounded">
             <img src="{{ url_for('static', filename='images/login_cover.jpg') }}" alt="Login Cover" class="img-fluid w-100 object-fit-cover">
         </div>
 
@@ -25,7 +25,7 @@
                     {{ login_form.hidden_tag() }}
 
                     <div class="mb-3">
-                        {{ login_form.identifier(class="form-control") }}
+                        {{ login_form.identifier(class="form-control", id="loginFormIdentifierField") }}
                         {% for error in login_form.identifier.errors %}
                             <div class="text-danger">{{ error }}</div>
                         {% endfor %}

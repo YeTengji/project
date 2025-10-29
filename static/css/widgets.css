@@ -107,3 +107,77 @@
     padding-top: 64px;
     line-height: 1;
 }
+
+/* To-Do List */
+
+#notepad {
+    width: 557px;
+    height: 720px;
+    border-radius: 2%;
+    color: #000;
+    background-image: url('/static/images/notepad.png');
+    background-color: #F6EEE3;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+#notepadTitle {
+    font-family: 'Roboto-Bold', serif;
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+#notepad:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#notepadBody {
+    font-family: 'LibreBaskerville', sans-serif;
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0;
+    max-height: 640px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+#notepadBody li {
+    animation: fadeIn 0.3s ease;
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding-left: 5rem;
+    padding-right: 2rem;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#notepadBody li:hover {
+    background-color: #f0f4ffaa;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+#notepadBody li input[type="checkbox"] {
+    flex: 0 0 auto;
+}
+
+#notepadBody li span {
+    flex: 1;
+    word-break: break-word;
+}
+
+#notepadTitle:focus,
+#notepadBody span[contenteditable]:focus,
+#notepadBody input[type="checkbox"]:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.checked {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.fade-out {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}

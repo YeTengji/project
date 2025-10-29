@@ -6,6 +6,7 @@ from werkzeug.security import check_password_hash
 from flask_login import UserMixin
 from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, String, Time, UniqueConstraint
 from sqlalchemy import Enum as SQLAEnum
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from extensions import db
@@ -130,3 +131,10 @@ class CalendarShare(db.Model):
     image = relationship('CalendarImage', back_populates='viewers')
     viewer = relationship('User', backref='received_calendar_images')
 
+class NotepadData(db.Model):
+    __tablename__ = 'notepad_data'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False, unique=True)
+    title: Mapped[str] = mapped_column(String(32), nullable=False, default='To-Do List')
+    body: Mapped[dict] = mapped_column(JSONB, nullable=False)

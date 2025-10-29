@@ -320,8 +320,153 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
+// Notepad
+function updateNotepad() {
+    const notepad = document.getElementById('notepad')
+    const notepadBody = document.getElementById('notepadBody');
+    const csrf_token = notepad.getAttribute('data-csrf')
+    if (!notepad || !notepadBody) return;
+
+    function getNotepadData() {
+        const title = document.getElementById('notepadTitle')?.innerText.trim() || "";
+        const items = Array.from(document.querySelectorAll('#notepadBody li')).map( li => {
+            const checkbox = li.querySelector('input[type="checkbox"]');
+            const span = li.querySelector('span');
+            return {
+                text: span?.innerText.trim() || "",
+                checked: checkbox?.checked || false
+            };
+        });
+        return {
+            title,
+            body: items
+        };
+    }
+
+    async function saveNotepad() {
+        const note = getNotepadData();
+        console.log(JSON.stringify(note));
+        try {
+            const response = await fetch('/api/notes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrf_token
+                },
+                body: JSON.stringify(note)
+            });
+            if (!response.ok) throw new Error('Failed to save note');
+            console.log('Note saved successfully!');
+        } catch (err) {
+            console.error('Save error:', err);
+        }
+    }
+
+    function placeCaretAtEnd(el) {
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+
+    function attachCaretBehavior(span) {
+        span.addEventListener('focus', () => placeCaretAtEnd(span));
+    }
+
+    notepadBody.querySelectorAll('span[contenteditable]').forEach(attachCaretBehavior);
+
+    notepadBody.addEventListener('change', function (e) {
+        if (e.target.matches('input[type="checkbox"]')) {
+            const span = e.target.nextElementSibling;
+            if (span && span.tagName === 'SPAN') {
+                span.classList.toggle('checked', e.target.checked);
+            }
+        }
+    });
+
+    notepadBody.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+
+            const currentLi = e.target.closest('li');
+            if (!currentLi) return;
+
+            const newLi = document.createElement('li');
+            newLi.innerHTML = `
+                <input type='checkbox' class='form-check-input me-2'>
+                <span contenteditable='true'></span>
+                <button class="btn btn-sm btn-link delete-line" title="Delete item">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            `;
+            notepadBody.insertBefore(newLi, currentLi.nextSibling);
+
+            const newSpan = newLi.querySelector('span');
+            attachCaretBehavior(newSpan);
+            newSpan.focus();
+        }
+        if (e.key === 'Backspace') {
+            const span = e.target;
+            if (span.tagName !== 'SPAN' || !span.isContentEditable) return;
+
+            const selection = window.getSelection()
+            const caretAtStart = selection.anchorOffset === 0;
+
+            if (span.innerText.trim() === "" && caretAtStart) {
+                e.preventDefault();
+                const li = span.closest('li');
+                if (li && notepadBody.children.length > 1) {
+                    const prev = li.previousElementSibling?.querySelector('span');
+                    li.remove();
+                    if (prev) prev.focus();
+                }
+            }
+        }
+    });
+
+    notepadBody.addEventListener('click', function (e) {
+        const deleteBtn = e.target.closest('.delete-line');
+        if (deleteBtn) {
+            const li = deleteBtn.closest('li');
+            if (li && notepadBody.children.length > 1) {
+                li.classList.add('fade-out')
+                setTimeout(() => li.remove(), 200);
+            } else if (li) {
+                const span = li.querySelector('span');
+                const checkbox = li.querySelector('input[type="checkbox"]');
+                if (span) span. innerText = '';
+                if (checkbox) checkbox.checked = false;
+            }
+        }
+    });
+
+    notepad.addEventListener('focusout', () => {
+        setTimeout(() => {
+            if (!notepad.contains(document.activeElement)) {
+                saveNotepad();
+            }
+        }, 50);
+    });
+
+    window.addEventListener('beforeunload', () => {
+        const note = getNotepadData();
+        fetch('/api/notes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf_token
+            },
+            body: JSON.stringify(note),
+            keepalive: true
+        });
+    });
+}
+
 // Main?
 document.addEventListener("DOMContentLoaded", () => {
+    formFieldFocus({ fieldID: 'loginFormIdentifierField' });
     formFieldFocus({
         triggerID: 'shareCalendarRequestModal',
         fieldID: 'share_calendar_request_form_identifier_field',
@@ -348,4 +493,5 @@ document.addEventListener("DOMContentLoaded", () => {
     shareCalendarCarousel();
     deleteCalendarShareRequest();
     deleteAcceptedCalendarShare();
+    updateNotepad();
 });

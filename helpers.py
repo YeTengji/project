@@ -1,4 +1,4 @@
-
+import requests
 import secrets
 import string
 from datetime import date, datetime, time, timedelta
@@ -207,3 +207,19 @@ def render_week_schedule(user, events):
     calendar.save(path)
 
 #endregion ---
+
+#region --- APIs ---
+
+def inspire():
+    url = "https://zenquotes.io/api/today"
+    print("Quote retrieval successful.")
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        inspiration = response.json()
+        return inspiration
+    except requests.RequestException as e:
+        print(f"Request error: {e}")
+    except (KeyError, ValueError) as e:
+        print(f"Data parsing error: {e}")
+    return None
