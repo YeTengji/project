@@ -380,7 +380,7 @@ def dashboard():
     ).scalars().first()
 
     if not notepad:
-        notepad = NotepadData(title='To-Do List', body=[])
+        notepad = NotepadData(title='Title', body=[])
 
     curent_events = (
         db.session.execute(
@@ -417,7 +417,7 @@ def save_note():
     else:
         note = NotepadData(
             user_id=current_user.id,
-            title= data.get('title', 'To-Do List'),
+            title= data.get('title', 'Title'),
             body=data['body']
         )
         db.session.add(note)

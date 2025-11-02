@@ -42,8 +42,7 @@ body {
 }
 
 #share-request {
-    animation: idlePulse 2s infinite;
-    animation: textGlow 2s ease-in-out infinite;
+    animation: textGlow 2s ease-in-out infinite, idlePulse 3s infinite;
     transform-origin: center;
 }
 

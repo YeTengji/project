@@ -136,5 +136,5 @@ class NotepadData(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False, unique=True)
-    title: Mapped[str] = mapped_column(String(32), nullable=False, default='To-Do List')
+    title: Mapped[str] = mapped_column(String(32), nullable=False, default='Title')
     body: Mapped[dict] = mapped_column(JSONB, nullable=False)

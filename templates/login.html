@@ -5,51 +5,60 @@
 {% block body %}
 
 <div class="container login-group d-flex justify-content-center align-items-center">
-    <div class="row w-100 align-items-stretch">
+    <div class="row">
 
-        <div class="col-md-7 d-flex overflow-hidden p-0 rounded">
-            <img src="{{ url_for('static', filename='images/login_cover.jpg') }}" alt="Login Cover" class="img-fluid w-100 object-fit-cover">
+        <div class="col-xl-7 d-flex overflow-hidden p-0 rounded">
+            <img src="{{ url_for('static', filename='images/login_image.png') }}" alt="Login Cover" class="img-fluid">
         </div>
 
-        <div class="col-md-5 d-flex">
+        <div class="col-xl-5 d-flex">
             <div id="loginFormBlock" class="container border rounded p-5 w-100">
                 <div class="mb-3">
-                    <h3>Welcome!</h3> 
+                    <h3 class="fw-bold">Welcome!</h3> 
                 </div>
-                <div class="mt-3">
+                <div>
+                    <p><strong>I.G.K.H. (It's Getting Kinda Hectic)</strong>. A weekly scheduler and calendar sharing web app built for the beautifully busy.</p>
+
+                    <p class="fst-italic text-muted">Plan your week. Share your chaos. You've got the power.</p>
+                </div>
+                <div class="mt-5">
                     <p>First time here? <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#signUpModal">Sign up</a>
                     </p>
                 </div>
-                <form method="POST" action="{{ url_for('login') }}">
-                    <input type="hidden" name="form_type" value="login">
-                    {{ login_form.hidden_tag() }}
+                <div class="py-3">
+                    <form method="POST" action="{{ url_for('login') }}">
+                        <!-- refactored to avoid signup modal collision{{ login_form.hidden_tag() }} -->
+                        <input type="hidden" name="form_type" value="login">
+                        <input name="theme" type="hidden" value="">
+                        {{ login_form.csrf_token(id="csrf_toke_login") }}
 
-                    <div class="mb-3">
-                        {{ login_form.identifier(class="form-control", id="loginFormIdentifierField") }}
-                        {% for error in login_form.identifier.errors %}
-                            <div class="text-danger">{{ error }}</div>
-                        {% endfor %}
+                        <div class="mb-3">
+                            {{ login_form.identifier(class="form-control", id="loginFormIdentifierField", autocomplete="username") }}
+                            {% for error in login_form.identifier.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="input-group mb-3">
+                            {{ login_form.password(class="form-control", id="login-form-password", autocomplete="current-password") }}
+                            <span class="input-group-text" onclick="togglePasswordVisibility('login-form-password', 'toggle-login-form-password')" style="cursor:pointer;">
+                                <i class="bi bi-eye" id="toggle-login-form-password"></i>
+                            </span>
+                            {% for error in login_form.password.errors %}
+                                <div class="text-danger">{{ error }} </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            {{ login_form.remember.label(class="form-check-label") }}
+                            {{ login_form.remember(class="form-check-input") }}
+                        </div>
+
+                        {{ login_form.submit(class="btn btn-primary", id="login-submit-button") }}
+                    </form>
+                    <div class="mt-3">
+                        <p><a href="{{ url_for('forgot_password') }}">Forgot Password</a></p>
                     </div>
-
-                    <div class="input-group mb-3">
-                        {{ login_form.password(class="form-control", id="login-form-password") }}
-                        <span class="input-group-text" onclick="togglePasswordVisibility('login-form-password', 'toggle-login-form-password')" style="cursor:pointer;">
-                            <i class="bi bi-eye" id="toggle-login-form-password"></i>
-                        </span>
-                        {% for error in login_form.password.errors %}
-                            <div class="text-danger">{{ error }} </div>
-                        {% endfor %}
-                    </div>
-
-                    <div class="mb-3 form-check">
-                        {{ login_form.remember.label(class="form-check-label") }}
-                        {{ login_form.remember(class="form-check-input") }}
-                    </div>
-
-                    {{ login_form.submit(class="btn btn-primary", id="login-submit-button") }}
-                </form>
-                <div class="mt-3">
-                    <p><a href="{{ url_for('forgot_password') }}">Forgot Password</a></p>
                 </div>
             </div>
         </div>

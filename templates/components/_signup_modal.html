@@ -26,7 +26,7 @@
                     </div>
                     <div class="col-md-6">
                         {{ signup_form.username.label(class="form-label") }}
-                        {{ signup_form.username(class="form-control") }}
+                        {{ signup_form.username(class="form-control", autocomplete="username") }}
                         {% for error in signup_form.username.errors %}
                         <div class="text-danger">{{ error }}</div>
                         {% endfor %}
@@ -41,7 +41,7 @@
                     <div class="col-md-6">
                         {{ signup_form.password.label(class="form-label") }}
                         <div class="input-group">
-                        {{ signup_form.password(class="form-control", id="signup-form-password") }}
+                        {{ signup_form.password(class="form-control", id="signup-form-password", autocomplete="new-password") }}
                             <span class="input-group-text"
                                 onclick="togglePasswordVisibility('signup-form-password', 'toggle-signup-form-password')"
                                 style="cursor:pointer;">
@@ -55,7 +55,7 @@
                     <div class="col-md-6">
                         {{ signup_form.confirm_password.label(class="form-label") }}
                         <div class="input-group">
-                        {{ signup_form.confirm_password(class="form-control", id="signup-form-confirm-password") }}
+                        {{ signup_form.confirm_password(class="form-control", id="signup-form-confirm-password", autocomplete="confirm-new-password") }}
                             <span class="input-group-text"
                                 onclick="togglePasswordVisibility('signup-form-confirm-password', 'toggle-signup-form-confirm-password')"
                                 style="cursor:pointer;">

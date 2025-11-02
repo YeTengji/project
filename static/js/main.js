@@ -324,8 +324,8 @@ updateClock();
 function updateNotepad() {
     const notepad = document.getElementById('notepad')
     const notepadBody = document.getElementById('notepadBody');
-    const csrf_token = notepad.getAttribute('data-csrf')
     if (!notepad || !notepadBody) return;
+    const csrf_token = notepad.getAttribute('data-csrf')
 
     function getNotepadData() {
         const title = document.getElementById('notepadTitle')?.innerText.trim() || "";
