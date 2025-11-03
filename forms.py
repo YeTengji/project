@@ -1,10 +1,7 @@
-import pytz
-import pycountry
-
 from datetime import date
 
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, DateField, DateTimeField, HiddenField, PasswordField, SelectField, SelectMultipleField, StringField, SubmitField, TextAreaField
+from wtforms import BooleanField, DateField, HiddenField, PasswordField, SelectField, SelectMultipleField, StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, Regexp, ValidationError
 from wtforms.widgets import CheckboxInput, ListWidget
 from flask_login import current_user
@@ -13,8 +10,6 @@ from sqlalchemy import func, select
 from helpers import generate_time_choices
 from models import db, User
 
-country_choices = sorted([(c.alpha_2, c.name) for c in pycountry.countries], key=lambda x: x[1])
-timezone_choices = sorted([(tz, tz) for tz in pytz.common_timezones])
 start_time_choices = generate_time_choices()
 end_time_choices = generate_time_choices(end_field=True)
 
@@ -46,8 +41,6 @@ class SignUpForm(FlaskForm):
         DataRequired(),
         EqualTo('password', message='Passwords must match')
         ])
-    country = SelectField('Country', choices=country_choices, validators=[DataRequired()])
-    time_zone = SelectField('Time Zone', choices=timezone_choices, validators=[DataRequired()])
     theme = HiddenField('Theme', default='dark')
     submit = SubmitField('Sign Up')
 
@@ -56,10 +49,6 @@ class SignUpForm(FlaskForm):
         user = db.session.execute(stmt).scalar_one_or_none()
         if user:
             raise ValidationError("Invalid username.")
-        
-    def validate_country(self, field):
-        if not pycountry.countries.get(alpha_2=field.data):
-            raise ValidationError("Invalid country code.")
 
 class UserProfileForm(FlaskForm):
     form_type = HiddenField('Form Type', default='user-profile')
@@ -71,8 +60,6 @@ class UserProfileForm(FlaskForm):
         Regexp(r'^[A-Za-z][A-Za-z0-9]*$', message="Username must be alphanumeric, start with a letter, and have no spaces.")
         ])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    country = SelectField('Country', choices=country_choices, validators=[DataRequired()])
-    time_zone = SelectField('Time Zone', choices=timezone_choices, validators=[DataRequired()])
     submit = SubmitField('Update')
 
     def validate_username(self, field):
@@ -81,10 +68,6 @@ class UserProfileForm(FlaskForm):
         if user and user.id != current_user.id:
             raise ValidationError("Please create a diffrenent username.")
 
-    def validate_country(self, field):
-        if not pycountry.countries.get(alpha_2=field.data):
-            raise ValidationError("Invalid country code.")
-        
 class ForgotPasswordForm(FlaskForm):
     form_type = HiddenField('Form Type', default='forgot-password')
     email = StringField('Email', validators=[DataRequired(), Email()])

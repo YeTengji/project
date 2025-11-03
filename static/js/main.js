@@ -97,51 +97,6 @@ function togglePasswordVisibility(inputId, iconId) {
     icon.className = isHidden ? "bi-eye-slash" : "bi bi-eye";
 }
 
-// Autofill Country and Timezone based on Client-side info
-function injectCountryTimezone(formCountry, formTimeZone) {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    const countryField = document.getElementById(formCountry);
-    const timeZoneField = document.getElementById(formTimeZone);
-    if (!countryField || !timeZoneField) return;
-
-    countryField.addEventListener('change', function () {
-        const selectedCountry = this.value;
-        fetch('/get-time-zones', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({ country: selectedCountry })
-        })
-        .then(res => res.json())
-        .then(data => {
-            timeZoneField.innerHTML = '';
-
-            if (data.time_zones.length === 0) {
-                timeZoneField.innerHTML = '<option value="">No time zones found</option>';
-            } else if (data.readonly) {
-                timeZoneField.innerHTML = `<option value="${data.time_zones[0]}">${data.time_zones[0]}</option>`;
-            } else {
-                data.time_zones.forEach(tz => {
-                    const option = document.createElement('option');
-                    option.value = tz;
-                    option.textContent = tz;
-                    timeZoneField.appendChild(option);
-                });
-            }
-        });
-    });
-
-    if (formCountry === 'signup-form-country') {
-        const locale = navigator.language || navigator.userLanguage || 'en-PH';
-        const country = locale.includes('-') ? locale.split('-')[1] : 'PH';
-
-        countryField.value = country.toUpperCase();
-        countryField.dispatchEvent(new Event('change'))
-    }
-}
-
 // --- Add Event Form Functions ---
 function addEventFormFunctions() {
     const startSelect = document.getElementById('addEventFormStartField');
@@ -487,8 +442,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showModal('signUpModalTrigger', 'signUpModal');
     showOffcanvas('addEventTrigger', 'addEventOffcanvas')
     loginTheme();
-    injectCountryTimezone('signup-form-country', 'signup-form-time-zone');
-    injectCountryTimezone('user-profile-form-country', 'user-profile-form-time-zone');
     addEventFormFunctions();
     shareCalendarCarousel();
     deleteCalendarShareRequest();

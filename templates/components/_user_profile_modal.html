@@ -41,20 +41,6 @@
                         <div class="text-danger">{{ error }}</div>
                         {% endfor %}
                     </div>
-                    <div class="col-md-6">
-                        {{ user_profile_form.country.label(class="form-label") }}
-                        {{ user_profile_form.country(class="form-control", id="user-profile-form-country") }}
-                        {% for error in user_profile_form.country.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                    <div class="col-md-6">
-                        {{ user_profile_form.time_zone.label(class="form-label") }}
-                        {{ user_profile_form.time_zone(class="form-control", id="user-profile-form-time-zone") }}
-                        {% for error in user_profile_form.time_zone.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                        {% endfor %}
-                    </div>
 
                     <div>
                         {{ user_profile_form.submit(class="btn btn-primary") }}

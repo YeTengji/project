@@ -1,12 +1,11 @@
 import enum
 
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time
 from typing import List
 from werkzeug.security import check_password_hash
 from flask_login import UserMixin
-from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, String, Time, UniqueConstraint
-from sqlalchemy import Enum as SQLAEnum
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Integer, String, Time, UniqueConstraint
+from sqlalchemy import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from extensions import db
@@ -20,10 +19,6 @@ class User(db.Model, UserMixin):
     username: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(256), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(256),nullable=False)
-    country: Mapped[str] = mapped_column(String(2), nullable=False)
-    time_zone: Mapped[str] = mapped_column(String(64), nullable=False)
-    creation_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    update_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     theme = relationship('UserTheme', back_populates='user', cascade='all, delete-orphan', uselist=False)
     reset_codes = relationship('ResetCode', back_populates='user', cascade='all, delete-orphan')
@@ -52,13 +47,13 @@ class ResetCode(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
     code: Mapped[str] = mapped_column(String(6), nullable=False)
-    requested: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    expiration: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    requested: Mapped[datetime] = mapped_column(DateTime(), default=lambda: datetime.now())
+    expiration: Mapped[datetime] = mapped_column(DateTime(), nullable=False)
     used: Mapped[bool] = mapped_column(default=False)
     user: Mapped['User'] = relationship(back_populates='reset_codes')
 
     def is_expired(self) -> bool:
-        return datetime.now(timezone.utc) > self.expiration
+        return datetime.now() > self.expiration
 
 class PreviousPassword(db.Model):
     __tablename__ = 'previous_passwords'
@@ -66,7 +61,7 @@ class PreviousPassword(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
     previous_password: Mapped[str] = mapped_column(String(256), nullable=False)
-    change_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    change_date: Mapped[datetime] = mapped_column(DateTime(), default=lambda: datetime.now())
     user: Mapped['User'] = relationship(back_populates='previous_passwords')
 
 class CalendarEvent(db.Model):
@@ -137,4 +132,4 @@ class NotepadData(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False, unique=True)
     title: Mapped[str] = mapped_column(String(32), nullable=False, default='Title')
-    body: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    body: Mapped[dict] = mapped_column(JSON, nullable=False)

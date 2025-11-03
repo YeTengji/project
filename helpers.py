@@ -1,8 +1,7 @@
 import requests
 import secrets
 import string
-from datetime import date, datetime, time, timedelta
-from zoneinfo import ZoneInfo
+from datetime import date, datetime, timedelta
 
 from flask import current_app
 from flask_login import current_user
@@ -53,7 +52,7 @@ This code will expire in 15 minutes.
 
 #region --- Calendar Functions ---
 def get_user_week_range(user):
-    today = datetime.now(ZoneInfo(user.time_zone))
+    today = datetime.now()
     start = today - timedelta(days=today.weekday() + 1 if today.weekday != 6 else 0)
     end = start + timedelta(days=6)
     return f"{start.strftime('%Y-%m-%d')} - {end.strftime('%Y-%m-%d')}"

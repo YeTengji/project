@@ -1,8 +1,7 @@
 import os
 import logging
-import pytz
 
-from datetime import datetime, time, timedelta, timezone
+from datetime import datetime, time, timedelta
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, session
@@ -24,7 +23,7 @@ def create_app():
     app = Flask(__name__)
     app.config['APP_NAME'] = 'I.G.K.H.'
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///igkh.db'
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=7)
     # Email Information
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -110,8 +109,6 @@ def login():
                 username=signup_form.username.data,
                 email=signup_form.email.data.strip().lower(),
                 password=generate_password_hash(signup_form.password.data),
-                country=signup_form.country.data,
-                time_zone=signup_form.time_zone.data
             )
 
             user_theme = UserTheme(theme=signup_form.theme.data)
@@ -143,7 +140,7 @@ def forgot_password():
             ).scalar_one_or_none()
 
             if existing_email:
-                now = datetime.now(timezone.utc)
+                now = datetime.now()
                 validity = timedelta(minutes=15)
 
                 recent_code = db.session.execute(select(ResetCode).where(
@@ -189,7 +186,7 @@ def verify_password_reset_code():
                 )
             ).scalar_one_or_none()
 
-            if code and code.expiration > datetime.now(timezone.utc):
+            if code and code.expiration > datetime.now():
                 session['code_verified_user_id'] = code.user_id
                 code.used = True
                 db.session.commit()
@@ -221,7 +218,7 @@ def reset_password():
             db.session.add(PreviousPassword(
                 user_id=user.id,
                 previous_password=user.password,
-                change_date=datetime.now(timezone.utc)
+                change_date=datetime.now()
             ))
             user.password = generate_password_hash(reset_password_form.password.data)
             db.session.commit()
@@ -236,18 +233,6 @@ def reset_password():
             flash('Password reset successful. Please log in.', 'success')
             return redirect(url_for('login'))
     return render_template('reset_password.html', reset_password_form=reset_password_form)
-
-@app.route('/get-time-zones', methods=['POST'])
-def get_time_zones():
-    data = request.get_json(force=True)
-    country_code = data.get('country', '').strip().upper()
-    if len(country_code) != 2:
-        return jsonify({'time_zones': [], 'readonly': False}), 400
-    time_zones = pytz.country_timezones.get(country_code.upper(), [])
-    return jsonify({
-        'time_zones': time_zones,
-        'readonly': len(time_zones) == 1
-    })
 
 #endregion --------
 
@@ -271,9 +256,7 @@ def user_profile():
             user_profile_form.first_name.data == current_user.first_name and
             user_profile_form.last_name.data == current_user.last_name and
             user_profile_form.username.data == current_user.username and
-            user_profile_form.email.data == current_user.email and
-            user_profile_form.country.data == current_user.country and
-            user_profile_form.time_zone.data == current_user.time_zone
+            user_profile_form.email.data == current_user.email
         )
 
         if unchanged:
@@ -284,8 +267,6 @@ def user_profile():
         current_user.last_name = user_profile_form.last_name.data
         current_user.username = user_profile_form.username.data
         current_user.email = user_profile_form.email.data
-        current_user.country = user_profile_form.country.data
-        current_user.time_zone = user_profile_form.time_zone.data
         db.session.commit()
 
         flash("Profile updated!", "success")
@@ -336,7 +317,7 @@ def change_password():
         db.session.add(PreviousPassword(
             user_id=user.id,
             previous_password=user.password,
-            change_date=datetime.now(timezone.utc)
+            change_date=datetime.now()
         ))
 
         user.password = generate_password_hash(change_password_form.password.data)
