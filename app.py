@@ -23,7 +23,7 @@ def create_app():
     app = Flask(__name__)
     app.config['APP_NAME'] = 'I.G.K.H.'
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///igkh.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=7)
     # Email Information
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -686,4 +686,4 @@ def print_calendar(image):
 #endregion
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
